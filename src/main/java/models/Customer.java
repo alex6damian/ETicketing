@@ -3,13 +3,11 @@ package models;
 public class Customer extends User {
     protected String  address;
     protected String  phoneNumber;
-    protected String  paymentMethod;
 
-    public Customer(String name, String email, String password, String address, String phoneNumber, String paymentMethod) {
+    public Customer(String name, String email, String password, String address, String phoneNumber) {
         super(name, email, password);
         this.address = address;
         this.phoneNumber = phoneNumber;
-        this.paymentMethod = paymentMethod;
     }
 
     @Override
@@ -19,7 +17,11 @@ public class Customer extends User {
         System.out.println("Email: " + email);
         System.out.println("Address: " + address);
         System.out.println("Phone Number: " + phoneNumber);
-        System.out.println("Payment Method: " + paymentMethod);
+    }
+
+    @Override
+    public String getUserType() {
+        return "Customer";
     }
 
     public String getAddress() {
@@ -38,11 +40,4 @@ public class Customer extends User {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(String paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
 }

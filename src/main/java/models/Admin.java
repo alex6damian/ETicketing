@@ -23,4 +23,9 @@ public class Admin extends User {
     public void setRole(String role) {
         this.role = role;
     }
+
+    @Override
+    public String getUserType() {
+        return "Admin";
+    }
 }

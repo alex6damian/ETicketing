@@ -56,6 +56,9 @@ public abstract class User {
     // Abstract methods
     public abstract void displayInfo();
 
+    public abstract String getUserType();
+
+
     // HashCode and Equals
     @Override
     public boolean equals(Object o) {
