@@ -16,9 +16,11 @@ public abstract class User {
         this.password = password;
     }
 
+    // Static and non-static blocks
     static
     {
-        userCount = 0;
+        UserDAO userDAO = new CustomerDAO();
+        userCount = userDAO.getUserCount();
     }
 
     {

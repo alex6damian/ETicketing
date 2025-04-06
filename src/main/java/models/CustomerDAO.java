@@ -1,8 +1,11 @@
 package models;
 
+import utils.PasswordUtils;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+// Data Acces Object
 public class CustomerDAO extends UserDAO {
 
     @Override
@@ -11,7 +14,7 @@ public class CustomerDAO extends UserDAO {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, user.getId());
             stmt.setString(2, user.getName());
-            stmt.setString(3, user.getPassword());
+            stmt.setString(3, PasswordUtils.hashPassword(user.getPassword()));
             stmt.setString(4, user.getEmail());
             stmt.setString(5, ((Customer) user).getAddress());
             stmt.setString(6, ((Customer) user).getPhoneNumber());

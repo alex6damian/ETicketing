@@ -8,4 +8,5 @@ repositories {
 
 dependencies {
     implementation 'org.postgresql:postgresql:42.7.1'
+    implementation 'org.mindrot:jbcrypt:0.4'
 }
