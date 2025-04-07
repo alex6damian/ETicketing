@@ -2,11 +2,11 @@ package ui;
 
 import java.sql.Connection;
 
+import java.sql.SQLException;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-import models.Customer;
-import models.CustomerDAO;
+import models.*;
 import utils.DatabaseConnection;
 import utils.PasswordUtils;
 import utils.Utils;
@@ -15,11 +15,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.ArrayList;
 
 public class Menu {
     private static boolean userLoggedIn;
     private static Menu instance;
     private Scanner Scanner;
+    protected ArrayList<Event> events;
 
     public Menu(){
         Scanner = new Scanner(System.in);
@@ -43,6 +45,11 @@ public class Menu {
             return;
         }
 
+        events = new ArrayList<>();
+        Concert concert = new Concert("20.10.2025", "18:00", "Bucharest", "Have good time with friends",
+                "Beach Please", "Kendrick Lamar", "Rap", 15);
+        events.add(concert);
+
         int option;
         do{
             System.out.println("\n\n=== E-Ticketing Menu ===");
@@ -59,9 +66,10 @@ public class Menu {
                     this.register(conn);
                     break;
                 case 2:
-                    userLoggedIn = this.login(conn);
-                    if(userLoggedIn){
-                        this.userMenu();
+                    User user = this.login(conn);
+                    if(user.getId() > 0){
+                        userLoggedIn = true;
+                        this.userMenu(user);
                     }
                     else
                         System.out.println("Login failed. Please try again.");
@@ -83,6 +91,7 @@ public class Menu {
         Pattern phonePattern = Pattern.compile(phoneRegex);
         Matcher emailMatcher;
         Matcher phoneMatcher;
+
 
         System.out.println("\n\n=== Register ===");
         System.out.print("Enter name: ");
@@ -129,7 +138,7 @@ public class Menu {
         return true;
     }
 
-    public boolean login(Connection conn) {
+    public User login(Connection conn) {
         System.out.println("\n\n=== Login ===");
         System.out.print("Enter email: ");
         String email = Scanner.nextLine();
@@ -148,22 +157,42 @@ public class Menu {
                     System.out.println("Login successful!");
                     System.out.println("Welcome, " + rs.getString("name") + "!");
                     Utils.sleep(1);
-                    return true;
+
+                    String type = rs.getString("user_type");
+                    if("Customer".equals(type)){
+                        return new Customer(
+                                rs.getString("name"),
+                                rs.getString("password"),
+                                rs.getString("email"),
+                                rs.getString("address"),
+                                rs.getString("phone")
+                        );
+                    } else if("Admin".equals(type)) {
+                        return new Admin(
+                                rs.getString("name"),
+                                rs.getString("password"),
+                                rs.getString("email"),
+                                rs.getString("role")
+                        );
+                    }
                 }
             }
         } catch (Exception e) {
             System.out.println("Error finding user: " + e.getMessage());
         }
-        return false;
+        return null;
     }
 
-    private void userMenu(){
+    private void userMenu(User user){
         int option;
+
         do{
             System.out.println("\n=== User Menu ===");
             System.out.println("1. View Profile");
             System.out.println("2. Update Profile");
-            System.out.println("3. Logout");
+            System.out.println("3. My tickets");
+            System.out.println("4. Events");
+            System.out.println("5. Logout");
             System.out.print("Select an option: ");
 
             option = Scanner.nextInt();
@@ -179,6 +208,12 @@ public class Menu {
                     // Call update profile method
                     break;
                 case 3:
+                    // de lucrat
+                    break;
+                case 4:
+                    this.showEvents();
+                    break;
+                case 5:
                     userLoggedIn = false;
                     System.out.println("Logging out...");
                     Utils.sleep(1);
@@ -187,5 +222,18 @@ public class Menu {
                     System.out.println("Invalid option. Please try again.");
             }
         } while(userLoggedIn);
+    }
+
+    private void showEvents() {
+        System.out.println("\n=== Events ===");
+        for (Event event : events) {
+            System.out.println(event);
+        }
+        System.out.println("Select event: ");
+        int option;
+        option = Scanner.nextInt();
+        Scanner.nextLine();
+//          La selectarea fiecarui eveniment, se va deschide un tab pentru a vedea
+//      detalii si pentru a cumpara bilet
     }
 }
