@@ -4,8 +4,8 @@ public class FootballTicket extends Ticket<FootballMatch> {
     protected String bundle;
     protected int seat;
 
-    protected FootballTicket(float price, FootballMatch event, String bundle, int seat) {
-        super(price, event);
+    public FootballTicket(FootballMatch event, User user, String bundle, int seat) {
+        super(500, event, user);
         this.bundle = bundle;
         this.seat = seat;
         this.setPrice(this.getPrice());

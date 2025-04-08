@@ -3,14 +3,17 @@ package ui;
 import java.sql.Connection;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 import models.*;
+import services.TicketService;
 import utils.DatabaseConnection;
 import utils.PasswordUtils;
 import utils.Utils;
 
+import javax.xml.transform.Result;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Objects;
@@ -22,6 +25,7 @@ public class Menu {
     private static Menu instance;
     private Scanner Scanner;
     protected ArrayList<Event> events;
+    protected HashMap<String, User> users;
 
     public Menu(){
         Scanner = new Scanner(System.in);
@@ -44,6 +48,9 @@ public class Menu {
             System.out.println("Database connection failed.");
             return;
         }
+
+        // Load the users from the database
+        loadUsers(conn);
 
         // Load the events from the database
         loadEvents(conn);
@@ -160,25 +167,7 @@ public class Menu {
                     System.out.println("Welcome, " + rs.getString("name") + "!");
                     Utils.sleep(1);
 
-                    String type = rs.getString("user_type");
-                    if("Customer".equals(type)){
-                        return new Customer(
-                                rs.getString("name"),
-                                rs.getString("email"),
-                                rs.getString("password"),
-                                rs.getInt("balance"),
-                                rs.getString("address"),
-                                rs.getString("phone")
-                        );
-                    } else if("Admin".equals(type)) {
-                        return new Admin(
-                                rs.getString("name"),
-                                rs.getString("email"),
-                                rs.getString("password"),
-                                rs.getInt("balance"),
-                                rs.getString("role")
-                        );
-                    }
+                    return users.get((rs.getString("email")));
                 }
             }
         } catch (Exception e) {
@@ -217,7 +206,7 @@ public class Menu {
                     break;
                 case 4:
                     System.out.println("Viewing events...");
-                    this.showEvents(conn);
+                    this.showEvents(conn, user);
                     break;
                 case 5:
                     userLoggedIn = false;
@@ -230,19 +219,51 @@ public class Menu {
         } while(userLoggedIn);
     }
 
-    private void showEvents(Connection conn) {
+    private void showEvents(Connection conn, User user) {
         Utils.sleep(1);
+        TicketService ticketService = new TicketService();
         int option;
         System.out.println("\n=== Events ===");
-
-        for (Event event : events) {
-            System.out.println(event);
+        for (int i=0; i < events.size(); i++) {
+            System.out.println(events.get(i));
         }
-        System.out.println("\nSelect event: ");
+        System.out.println("\nSelect event to buy ticket: ");
         option = Scanner.nextInt();
         Scanner.nextLine();
+        ticketService.buyFootballTicket(conn, (Customer) user, (FootballMatch) events.get(option-1), "Gold", 1);
 //          La selectarea fiecarui eveniment, se va deschide un tab pentru a vedea
 //      detalii si pentru a cumpara bilet
+    }
+
+    private void loadUsers(Connection conn){
+        users = new HashMap<>();
+        String query = "SELECT * FROM users";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String type = rs.getString("user_type");
+                if(type.equals("Customer")){
+                    users.put(rs.getString("email"), new Customer(
+                            rs.getString("name"),
+                            rs.getString("email"),
+                            rs.getString("password"),
+                            rs.getInt("balance"),
+                            rs.getString("address"),
+                            rs.getString("phone")
+                    ));
+                } else if(type.equals("Admin")){
+                    users.put(rs.getString("email"), new Admin(
+                            rs.getString("name"),
+                            rs.getString("email"),
+                            rs.getString("password"),
+                            rs.getInt("balance"),
+                            rs.getString("role")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error loading users: " + e.getMessage());
+        }
     }
 
     private void loadEvents(Connection conn) {

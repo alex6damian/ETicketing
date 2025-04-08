@@ -1,14 +1,20 @@
 package models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Customer extends User {
     protected String  address;
     protected String  phoneNumber;
+    protected List<Ticket<?>> tickets;
 
     public Customer(String name, String email, String password, double balance, String address, String phoneNumber) {
         super(name, email, password, balance);
         this.address = address;
         this.phoneNumber = phoneNumber;
+        this.tickets = new ArrayList<Ticket<?>>();
     }
+
 
     @Override
     public void displayInfo() {
@@ -38,6 +44,10 @@ public class Customer extends User {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public List<Ticket<?>> getTickets() {
+        return tickets;
     }
 
 }

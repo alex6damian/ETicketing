@@ -21,8 +21,7 @@ public abstract class User {
     // Static and non-static blocks
     static
     {
-        UserDAO userDAO = new CustomerDAO();
-        userCount = userDAO.getUserCount();
+        userCount = 0;
     }
 
     {
