@@ -26,10 +26,12 @@ public class Menu {
     private Scanner Scanner;
     protected ArrayList<Event> events;
     protected HashMap<String, User> users;
+    private static Connection conn;
 
     public Menu(){
         Scanner = new Scanner(System.in);
         userLoggedIn = false;
+        conn = DatabaseConnection.getInstance().getConnection();
     }
 
     public static Menu getInstance(){
@@ -40,7 +42,6 @@ public class Menu {
     }
 
     public void run()  {
-        java.sql.Connection conn = DatabaseConnection.getInstance().getConnection();
 
         if (conn != null) {
             System.out.println("Database connection is working.");
@@ -54,6 +55,9 @@ public class Menu {
 
         // Load the events from the database
         loadEvents(conn);
+
+        userLoggedIn = true; // DEBUG
+        this.userMenu(users.get("alex@gmail.com"), conn); // DEBUG
 
         int option;
         do{
@@ -221,7 +225,6 @@ public class Menu {
 
     private void showEvents(Connection conn, User user) {
         Utils.sleep(1);
-        TicketService ticketService = new TicketService();
         int option;
         System.out.println("\n=== Events ===");
         for (int i=0; i < events.size(); i++) {
@@ -230,7 +233,8 @@ public class Menu {
         System.out.println("\nSelect event to buy ticket: ");
         option = Scanner.nextInt();
         Scanner.nextLine();
-        ticketService.buyFootballTicket(conn, (Customer) user, (FootballMatch) events.get(option-1), "Gold", 1);
+        TicketService.getInstance().buyFootballTicket(conn, (Customer) user, (FootballMatch) events.get(option-1), "Gold", 1);
+        ((FootballMatch) events.get(option-1)).sellTicket(1);
 //          La selectarea fiecarui eveniment, se va deschide un tab pentru a vedea
 //      detalii si pentru a cumpara bilet
     }
@@ -275,6 +279,7 @@ public class Menu {
                 String type = rs.getString("type");
                 if ("Concert".equals(type)) {
                     events.add(new Concert(
+                            rs.getInt("id"),
                             rs.getString("date"),
                             rs.getString("time"),
                             rs.getString("location"),
@@ -286,6 +291,7 @@ public class Menu {
                     ));
                 } else if ("FootballMatch".equals(type)) {
                     events.add(new FootballMatch(
+                            rs.getInt("id"),
                             rs.getString("date"),
                             rs.getString("time"),
                             rs.getString("location"),
@@ -296,6 +302,7 @@ public class Menu {
                     ));
                 } else if ("UFCOnline".equals(type)) {
                     events.add(new UFCOnline(
+                            rs.getInt("id"),
                             rs.getString("date"),
                             rs.getString("time"),
                             rs.getString("location"),
@@ -311,4 +318,7 @@ public class Menu {
         }
     }
 
+    public static Connection getConn() {
+        return conn;
+    }
 }

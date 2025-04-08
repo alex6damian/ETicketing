@@ -7,6 +7,20 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class TicketService {
+    private static TicketService instance;
+
+    private TicketService() {}
+
+    public static TicketService getInstance() {
+        if (instance == null) {
+            synchronized (TicketService.class) {
+                if (instance == null) {
+                    instance = new TicketService();
+                }
+            }
+        }
+        return instance;
+    }
 
     public FootballTicket buyFootballTicket(Connection conn, User user, FootballMatch event, String bundle, int seat) {
         FootballTicket ticket = new FootballTicket(event, user, bundle, seat);
@@ -18,8 +32,6 @@ public class TicketService {
 
             float price = ticket.getPrice();
             ticket.setPrice(price);
-
-            System.out.println(ticket.getId());
 
             // Insert the ticket into the database
             insertStmt.setInt(1, ticket.getId());

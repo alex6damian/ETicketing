@@ -4,8 +4,8 @@ public class UFCOnline extends Event {
     protected String link;
     protected String fightType;
 
-    public UFCOnline(String date, String time, String location, String description, String eventName, String link, String fightType) {
-        super(date, time, location, description, eventName);
+    public UFCOnline(int eventId, String date, String time, String location, String description, String eventName, String link, String fightType) {
+        super(eventId, date, time, location, description, eventName);
         this.link = link;
         this.fightType = fightType;
     }

@@ -1,5 +1,7 @@
 package models;
 
+import ui.Menu;
+
 import java.sql.Connection;
 
 import java.sql.PreparedStatement;
@@ -12,8 +14,7 @@ public abstract class Ticket<T extends Event> {
     protected float price;
     protected T event;
     protected User user;
-    protected static int counter = 0;
-    protected Connection conn;
+    protected static int counter;
 
     protected Ticket(float price, T event, User user) {
         this.id = counter;
@@ -58,12 +59,11 @@ public abstract class Ticket<T extends Event> {
 
     public static int getTicketCount() {
         String query = "SELECT COUNT(*) FROM tickets";
-        try (PreparedStatement stmt = connection.prepareStatement(query);
+        try (PreparedStatement stmt = Menu.getConn().prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
-                int count = rs.getInt(1);
-                System.out.println("Ticket count from database: " + count); // Debugging log
-                return count;
+                // System.out.println("Ticket count from database: " + count); // Debugging log
+                return rs.getInt(1);
             }
         } catch (Exception e) {
             System.err.println("Error getting ticket count: " + e.getMessage());

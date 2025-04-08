@@ -1,12 +1,15 @@
 package models;
 
+import services.EventService;
+import ui.Menu;
+
 public class FootballMatch extends Event {
     String stadiumName;
     int seatsAvailable;
 
 
-    public FootballMatch(String date, String time, String location, String description, String eventName, String stadiumName, int seatsAvailable) {
-        super(date, time, location, description, eventName);
+    public FootballMatch(int eventId, String date, String time, String location, String description, String eventName, String stadiumName, int seatsAvailable) {
+        super(eventId, date, time, location, description, eventName);
         this.stadiumName = stadiumName;
         this.seatsAvailable = seatsAvailable;
     }
@@ -35,6 +38,8 @@ public class FootballMatch extends Event {
         } else {
             System.out.println("Not enough tickets available.");
         }
+
+        EventService.getInstance().updateSeatsAvailable(Menu.getConn(), this.getEventId(), this.getSeatsAvailable());
     }
 
     @Override

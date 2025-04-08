@@ -10,13 +10,13 @@ public abstract class Event {
     static int eventCount;
 
 
-    Event(String date, String time, String location, String description, String eventName) {
+    Event(int eventId, String date, String time, String location, String description, String eventName) {
         this.date = date;
         this.time = time;
         this.location = location;
         this.description = description;
         this.eventName = eventName;
-        this.eventId = eventCount;
+        this.eventId = eventId;
     }
 
     public String getDate() {
@@ -49,12 +49,12 @@ public abstract class Event {
     public abstract String getEventType();
 
     // Static and non-static blocks
-    static {
-        eventCount = 0;
-    }
-    {
-        eventCount++;
-    }
+//    static {
+//        eventCount = 0;
+//    }
+//    {
+//        eventCount++;
+//    }`
 
     public String toString() {
         return "\nEvent id: " + this.getEventId() +

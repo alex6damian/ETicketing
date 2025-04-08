@@ -5,8 +5,8 @@ public class Concert extends Event {
     String genre;
     int seatsAvailable;
 
-    public Concert(String date, String time, String location, String description, String eventName, String artist, String genre, int seatsAvailable) {
-        super(date, time, location, description, eventName);
+    public Concert(int eventId, String date, String time, String location, String description, String eventName, String artist, String genre, int seatsAvailable) {
+        super(eventId, date, time, location, description, eventName);
         this.artist = artist;
         this.genre = genre;
         this.seatsAvailable = seatsAvailable;
