@@ -7,13 +7,15 @@ public abstract class User {
     protected String name;
     protected String email;
     protected String password;
+    protected double balance;
     static int userCount;
 
-    public User(String name, String email, String password) {
+    public User(String name, String email, String password, double balance) {
         this.id = userCount;
         this.name = name;
         this.email = email;
         this.password = password;
+        this.balance = balance;
     }
 
     // Static and non-static blocks
@@ -53,6 +55,14 @@ public abstract class User {
 
     public int getId(){
         return id;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
     }
 
     // Abstract methods

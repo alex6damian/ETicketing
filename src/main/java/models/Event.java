@@ -1,12 +1,12 @@
 package models;
 
 public abstract class Event {
+    int eventId;
     String date;
     String time;
     String location;
     String description;
     String eventName;
-    int eventId;
     static int eventCount;
 
 
@@ -57,6 +57,11 @@ public abstract class Event {
     }
 
     public String toString() {
-        return "Event name: " + eventName + ", date: " + date + ", time: " + time + ", location: " + location + ", description: " + description + "\n";
+        return "\nEvent id: " + this.getEventId() +
+                "\nEvent name: " + this.getEventName() +
+                ", Date: " + this.getDate() +
+                ", Time: " + this.getTime() +
+                ", Location: " + this.getLocation() +
+                ", Description: " + this.getDescription();
         }
     }

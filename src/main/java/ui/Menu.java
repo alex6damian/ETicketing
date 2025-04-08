@@ -45,10 +45,8 @@ public class Menu {
             return;
         }
 
-        events = new ArrayList<>();
-        Concert concert = new Concert("20.10.2025", "18:00", "Bucharest", "Have good time with friends",
-                "Beach Please", "Kendrick Lamar", "Rap", 15);
-        events.add(concert);
+        // Load the events from the database
+        loadEvents(conn);
 
         int option;
         do{
@@ -69,7 +67,7 @@ public class Menu {
                     User user = this.login(conn);
                     if(user.getId() > 0){
                         userLoggedIn = true;
-                        this.userMenu(user);
+                        this.userMenu(user, conn);
                     }
                     else
                         System.out.println("Login failed. Please try again.");
@@ -99,37 +97,41 @@ public class Menu {
         System.out.print("Enter email: ");
         String email = Scanner.nextLine();
         emailMatcher = emailPattern.matcher(email);
-        if (!emailMatcher.matches()) {
+        while (!emailMatcher.matches()) {
             System.out.println("Invalid email format.");
             Utils.sleep(1);
-            register(conn);
+            System.out.print("Enter email: ");
+            email = Scanner.nextLine();
+            emailMatcher = emailPattern.matcher(email);
         }
         System.out.print("Enter password: ");
         String password = Scanner.nextLine();
-        if (password.length() < 8) {
+        while (password.length() < 8) {
             System.out.println("Password must be at least 8 characters long.");
             Utils.sleep(1);
-            register(conn);
+            System.out.print("Enter password: ");
+            password = Scanner.nextLine();
         }
         System.out.print("Enter address: ");
         String address = Scanner.nextLine();
         System.out.print("Enter phone number: ");
         String phoneNumber = Scanner.nextLine();
         phoneMatcher = phonePattern.matcher(phoneNumber);
-        if (!phoneMatcher.matches()) {
+        while (!phoneMatcher.matches()) {
             System.out.println("Invalid phone number format.");
             Utils.sleep(1);
-            register(conn);
+            System.out.print("Enter phone number: ");
+            phoneNumber = Scanner.nextLine();
+            phoneMatcher = phonePattern.matcher(phoneNumber);
         }
 
-        Customer customer = new Customer(name, email, password, address, phoneNumber);
+        Customer customer = new Customer(name, email, password, 5000, address, phoneNumber);
         CustomerDAO customerDAO = new CustomerDAO();
 
         System.out.println("Registering user...");
         if (customerDAO.addUser(customer)) {
             Utils.sleep(1);
             System.out.println("Registration successful!");
-
         } else {
             Utils.sleep(1);
             System.out.println("Registration failed.");
@@ -162,16 +164,18 @@ public class Menu {
                     if("Customer".equals(type)){
                         return new Customer(
                                 rs.getString("name"),
-                                rs.getString("password"),
                                 rs.getString("email"),
+                                rs.getString("password"),
+                                rs.getInt("balance"),
                                 rs.getString("address"),
                                 rs.getString("phone")
                         );
                     } else if("Admin".equals(type)) {
                         return new Admin(
                                 rs.getString("name"),
-                                rs.getString("password"),
                                 rs.getString("email"),
+                                rs.getString("password"),
+                                rs.getInt("balance"),
                                 rs.getString("role")
                         );
                     }
@@ -183,11 +187,12 @@ public class Menu {
         return null;
     }
 
-    private void userMenu(User user){
+    private void userMenu(User user, Connection conn){
         int option;
 
         do{
             System.out.println("\n=== User Menu ===");
+            System.out.println("Balance: " + user.getBalance() + "$");
             System.out.println("1. View Profile");
             System.out.println("2. Update Profile");
             System.out.println("3. My tickets");
@@ -211,7 +216,8 @@ public class Menu {
                     // de lucrat
                     break;
                 case 4:
-                    this.showEvents();
+                    System.out.println("Viewing events...");
+                    this.showEvents(conn);
                     break;
                 case 5:
                     userLoggedIn = false;
@@ -224,16 +230,64 @@ public class Menu {
         } while(userLoggedIn);
     }
 
-    private void showEvents() {
+    private void showEvents(Connection conn) {
+        Utils.sleep(1);
+        int option;
         System.out.println("\n=== Events ===");
+
         for (Event event : events) {
             System.out.println(event);
         }
-        System.out.println("Select event: ");
-        int option;
+        System.out.println("\nSelect event: ");
         option = Scanner.nextInt();
         Scanner.nextLine();
 //          La selectarea fiecarui eveniment, se va deschide un tab pentru a vedea
 //      detalii si pentru a cumpara bilet
     }
+
+    private void loadEvents(Connection conn) {
+        events = new ArrayList<>();
+        String query = "SELECT * FROM Event";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String type = rs.getString("type");
+                if ("Concert".equals(type)) {
+                    events.add(new Concert(
+                            rs.getString("date"),
+                            rs.getString("time"),
+                            rs.getString("location"),
+                            rs.getString("description"),
+                            rs.getString("eventName"),
+                            rs.getString("artist"),
+                            rs.getString("genre"),
+                            rs.getInt("seatsAvailable")
+                    ));
+                } else if ("FootballMatch".equals(type)) {
+                    events.add(new FootballMatch(
+                            rs.getString("date"),
+                            rs.getString("time"),
+                            rs.getString("location"),
+                            rs.getString("description"),
+                            rs.getString("eventName"),
+                            rs.getString("stadiumName"),
+                            rs.getInt("seatsAvailable")
+                    ));
+                } else if ("UFCOnline".equals(type)) {
+                    events.add(new UFCOnline(
+                            rs.getString("date"),
+                            rs.getString("time"),
+                            rs.getString("location"),
+                            rs.getString("description"),
+                            rs.getString("eventName"),
+                            rs.getString("link"),
+                            rs.getString("fightType")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error loading events: " + e.getMessage());
+        }
+    }
+
 }

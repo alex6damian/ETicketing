@@ -3,8 +3,8 @@ package models;
 public class Admin extends User {
     private String role;
 
-    public Admin(String name, String email, String password, String role) {
-        super(name, email, password);
+    public Admin(String name, String email, String password, int balance, String role) {
+        super(name, email, password, balance);
         this.role = role;
     }
 

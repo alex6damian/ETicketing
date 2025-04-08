@@ -4,9 +4,10 @@ public class UFCOnline extends Event {
     protected String link;
     protected String fightType;
 
-    UFCOnline(String date, String time, String location, String description, String eventName, String link) {
+    public UFCOnline(String date, String time, String location, String description, String eventName, String link, String fightType) {
         super(date, time, location, description, eventName);
         this.link = link;
+        this.fightType = fightType;
     }
 
     public String getLink() {
@@ -17,9 +18,18 @@ public class UFCOnline extends Event {
         this.link = link;
     }
 
+    public String getFightType() {
+        return fightType;
+    }
+
+    public void setFightType(String fightType) {
+        this.fightType = fightType;
+    }
+
     @Override
     public String toString() {
-        return "UFC Online: " + link + ", Fight type:" + fightType;
+
+        return super.toString() + "\nFight type: " + fightType;
     }
 
     @Override

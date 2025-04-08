@@ -24,7 +24,9 @@ public class Concert extends Event {
 
     @Override
     public String toString() {
-        return "Concert, artist: " + artist + ", genre: " + genre + ", seatsAvailable: " + seatsAvailable + "\n";
+        return super.toString() + "\nArtist: " + artist +
+                ", Genre: " + genre +
+                ", Seats available: " + seatsAvailable;
     }
 
     @Override

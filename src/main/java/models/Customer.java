@@ -4,8 +4,8 @@ public class Customer extends User {
     protected String  address;
     protected String  phoneNumber;
 
-    public Customer(String name, String email, String password, String address, String phoneNumber) {
-        super(name, email, password);
+    public Customer(String name, String email, String password, double balance, String address, String phoneNumber) {
+        super(name, email, password, balance);
         this.address = address;
         this.phoneNumber = phoneNumber;
     }

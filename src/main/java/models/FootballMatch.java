@@ -39,7 +39,8 @@ public class FootballMatch extends Event {
 
     @Override
     public String toString() {
-        return "Football match: " + stadiumName;
+        return super.toString() + "\nStadium name: " + stadiumName +
+                ", Seats available: " + seatsAvailable ;
     }
 
     @Override
