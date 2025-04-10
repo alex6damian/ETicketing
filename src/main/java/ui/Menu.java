@@ -7,11 +7,23 @@ import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import models.*;
 import services.TicketService;
 import utils.DatabaseConnection;
 import utils.PasswordUtils;
 import utils.Utils;
+
+//import javafx.application.Application;
+//import javafx.scene.Scene;
+//import javafx.scene.control.Button;
+//import javafx.scene.layout.StackPane;
+//import javafx.stage.Stage;
 
 import javax.xml.transform.Result;
 import java.sql.PreparedStatement;
@@ -20,10 +32,16 @@ import java.util.Objects;
 import java.util.Scanner;
 import java.util.ArrayList;
 
-public class Menu {
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
+
+public class Menu extends Application {
     private static boolean userLoggedIn;
     private static Menu instance;
-    private Scanner Scanner;
+    private final Scanner Scanner;
     protected ArrayList<Event> events;
     protected HashMap<String, User> users;
     private static Connection conn;
@@ -32,6 +50,12 @@ public class Menu {
         Scanner = new Scanner(System.in);
         userLoggedIn = false;
         conn = DatabaseConnection.getInstance().getConnection();
+        if (conn != null) {
+            System.out.println("Database connection is working.");
+        } else {
+            System.out.println("Database connection failed.");
+            return;
+        }
     }
 
     public static Menu getInstance(){
@@ -41,56 +65,190 @@ public class Menu {
         return instance;
     }
 
-    public void run()  {
-
-        if (conn != null) {
-            System.out.println("Database connection is working.");
-        } else {
-            System.out.println("Database connection failed.");
-            return;
-        }
-
+    @Override
+    public void start(Stage stage) {
         // Load the users from the database
         loadUsers(conn);
 
         // Load the events from the database
         loadEvents(conn);
 
-        userLoggedIn = true; // DEBUG
-        this.userMenu(users.get("alex@gmail.com"), conn); // DEBUG
-
-        int option;
-        do{
-            System.out.println("\n\n=== E-Ticketing Menu ===");
-            System.out.println("1. Register");
-            System.out.println("2. Login");
-            System.out.println("3. Exit");
-            System.out.print("Select an option: ");
-
-            option = Scanner.nextInt();
-            Scanner.nextLine(); // Consume newline
-
-            switch(option){
-                case 1:
-                    this.register(conn);
-                    break;
-                case 2:
-                    User user = this.login(conn);
-                    if(user.getId() > 0){
-                        userLoggedIn = true;
-                        this.userMenu(user, conn);
-                    }
-                    else
-                        System.out.println("Login failed. Please try again.");
-                    break;
-                case 3:
-                    System.out.println("Exiting...");
-                    break;
-                default:
-                    System.out.println("Invalid option. Please try again.");
-            }
-        } while(option != 3);
+        showMainMenu(stage);
     }
+
+    public static void main(String[] args) {
+        launch(args); // Lansează aplicația JavaFX
+    }
+
+    private void showMainMenu(Stage stage) {
+        // Create a welcome message
+        Label welcomeMessage = new Label("Welcome to our E-Ticketing System!");
+        welcomeMessage.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #333;");
+
+        // Create buttons
+        Button registerButton = new Button("Register");
+        registerButton.setPrefSize(200, 50);
+        Button loginButton = new Button("Login");
+        loginButton.setPrefSize(200, 50);
+        Button exitButton = new Button("Exit");
+        exitButton.setPrefSize(200, 50);
+
+        // Create a VBox layout
+        VBox vbox = new VBox(10);
+        vbox.getChildren().addAll(registerButton, loginButton, exitButton);
+        vbox.setAlignment(Pos.CENTER);
+
+        // Create a BorderPane layout
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(welcomeMessage);
+        BorderPane.setAlignment(welcomeMessage, Pos.CENTER );
+        borderPane.setCenter(vbox);
+
+        // Create a StackPane to overlay the exit message
+        StackPane stackPane = new StackPane();
+        stackPane.getChildren().add(borderPane);
+
+        // Create a label for the exit message (initially hidden)
+        Label buttonMessage = new Label();
+        buttonMessage.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #35c9c5;");
+        StackPane.setAlignment(buttonMessage, Pos.BOTTOM_CENTER);
+        stackPane.getChildren().add(buttonMessage);
+
+        // Set the scene
+        Scene scene = new Scene(stackPane, 1280, 720);
+        scene.getStylesheets().add("styles.css");
+        stage.setTitle("E-Ticketing Menu");
+        stage.setScene(scene);
+
+        // Set button actions
+        registerButton.setOnAction(e -> {
+            try {
+                register(conn);
+            } catch (Exception ex) {
+                System.out.println("Error during registration: " + ex.getMessage());
+            }
+        });
+
+        loginButton.setOnAction(e -> {
+            try {
+                showLoginMenu(stage);
+            } catch (Exception ex) {
+                System.out.println("Error during login: " + ex.getMessage());
+            }
+        });
+
+        exitButton.setOnAction(e -> {
+            // Display the exit message
+            buttonMessage.setText("Exiting...");
+
+            // Close the database connection and delay the exit to allow the label to be displayed
+            javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(2));
+            delay.setOnFinished(event -> {
+                // Close the database connection
+                try {
+                    if (conn != null && !conn.isClosed()) {
+                        conn.close();
+                        System.out.println("Database connection closed.");
+                    }
+                } catch (SQLException ex) {
+                    System.out.println("Error closing database connection: " + ex.getMessage());
+                }
+                System.exit(0);
+            });
+            delay.play();
+        });
+
+        stage.show();
+    }
+
+    private void showLoginMenu(Stage stage) {
+        Label emailLabel = new Label("Email:");
+        emailLabel.setPrefWidth(100); // Setează lățimea preferată
+        javafx.scene.control.TextField emailField = new javafx.scene.control.TextField();
+        emailField.setPrefWidth(200); // Setează lățimea câmpului de text
+
+        Label passwordLabel = new Label("Password:");
+        passwordLabel.setPrefWidth(100); // Setează lățimea preferată
+        javafx.scene.control.PasswordField passwordField = new javafx.scene.control.PasswordField();
+        passwordField.setPrefWidth(200); // Setează lățimea câmpului de text
+
+        Button loginButton = new Button("Login");
+        Button backButton = new Button("Back");
+
+        backButton.setOnAction(e -> start(stage)); // Revine la meniul principal
+
+        loginButton.setOnAction(e -> {
+            String email = emailField.getText();
+            String password = passwordField.getText();
+            User user = login(conn, email, password);
+            if (user != null) {
+                userLoggedIn = true;
+                userMenu(user, conn);
+            } else {
+                System.out.println("Login failed. Please try again.");
+            }
+        });
+
+        // Folosește un HBox pentru fiecare rând
+        HBox emailRow = new HBox(10, emailLabel, emailField);
+        emailRow.setAlignment(Pos.CENTER);
+
+        HBox passwordRow = new HBox(10, passwordLabel, passwordField);
+        passwordRow.setAlignment(Pos.CENTER);
+
+        VBox vbox = new VBox(10);
+        vbox.getChildren().addAll(emailRow, passwordRow, loginButton, backButton);
+        vbox.setAlignment(Pos.CENTER);
+
+        Scene loginScene = new Scene(vbox, 1280, 720);
+        loginScene.getStylesheets().add("styles.css");
+        stage.setScene(loginScene);
+    }
+
+//    public void run()  {
+//
+//        if (conn != null) {
+//            System.out.println("Database connection is working.");
+//        } else {
+//            System.out.println("Database connection failed.");
+//            return;
+//        }
+//
+//        userLoggedIn = true; // DEBUG
+//        this.userMenu(users.get("alex@gmail.com"), conn); // DEBUG
+//
+//        int option;
+//        do{
+//            System.out.println("\n\n=== E-Ticketing Menu ===");
+//            System.out.println("1. Register");
+//            System.out.println("2. Login");
+//            System.out.println("3. Exit");
+//            System.out.print("Select an option: ");
+//
+//            option = Scanner.nextInt();
+//            Scanner.nextLine(); // Consume newline
+//
+//            switch(option){
+//                case 1:
+//                    this.register(conn);
+//                    break;
+//                case 2:
+//                    User user = this.login(conn);
+//                    if(user.getId() > 0){
+//                        userLoggedIn = true;
+//                        this.userMenu(user, conn);
+//                    }
+//                    else
+//                        System.out.println("Login failed. Please try again.");
+//                    break;
+//                case 3:
+//                    System.out.println("Exiting...");
+//                    break;
+//                default:
+//                    System.out.println("Invalid option. Please try again.");
+//            }
+//        } while(option != 3);
+//    }
 
     public boolean register(Connection conn) {
         // Regex patterns and matchers
@@ -151,13 +309,7 @@ public class Menu {
         return true;
     }
 
-    public User login(Connection conn) {
-        System.out.println("\n\n=== Login ===");
-        System.out.print("Enter email: ");
-        String email = Scanner.nextLine();
-        System.out.print("Enter password: ");
-        String password = Scanner.nextLine();
-
+    public User login(Connection conn, String email, String password) {
         String query = "SELECT * FROM users WHERE email = ?";
         try (PreparedStatement smtm = conn.prepareStatement(query)) {
             smtm.setString(1, email);
