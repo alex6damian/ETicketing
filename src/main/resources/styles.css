@@ -1,4 +1,4 @@
-/* styles.css */
+/* Button styling */
 .button {
     -fx-font-size: 16px;
     -fx-background-color: #35c9c5;
@@ -6,4 +6,18 @@
     -fx-background-radius: 10;
     -fx-border-radius: 10;
     -fx-padding: 10 20 10 20;
+}
+
+/* Background color */
+.background {
+    -fx-background-color: #f0f0f0;
+}
+
+/* Label */
+.custom-label {
+    -fx-font-size: 50px;
+    -fx-text-fill: #35c9c5;
+    -fx-font-weight: bold;
+    -fx-padding: 30 0 0 0; /* Padding-top */
+    -fx-font-family: "Curlz MT";
 }

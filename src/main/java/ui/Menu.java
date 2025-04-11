@@ -9,9 +9,7 @@ import java.util.regex.Matcher;
 
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import models.*;
 import services.TicketService;
@@ -35,7 +33,6 @@ import java.util.ArrayList;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 public class Menu extends Application {
@@ -83,7 +80,7 @@ public class Menu extends Application {
     private void showMainMenu(Stage stage) {
         // Create a welcome message
         Label welcomeMessage = new Label("Welcome to our E-Ticketing System!");
-        welcomeMessage.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #333;");
+        welcomeMessage.getStyleClass().add("custom-label");
 
         // Create buttons
         Button registerButton = new Button("Register");
@@ -92,6 +89,10 @@ public class Menu extends Application {
         loginButton.setPrefSize(200, 50);
         Button exitButton = new Button("Exit");
         exitButton.setPrefSize(200, 50);
+
+        registerButton.getStyleClass().add("button");
+        loginButton.getStyleClass().add("button");
+        exitButton.getStyleClass().add("button");
 
         // Create a VBox layout
         VBox vbox = new VBox(10);
@@ -108,6 +109,8 @@ public class Menu extends Application {
         StackPane stackPane = new StackPane();
         stackPane.getChildren().add(borderPane);
 
+        stackPane.setStyle("-fx-background-color: #423f3f;"); // Set background color
+
         // Create a label for the exit message (initially hidden)
         Label buttonMessage = new Label();
         buttonMessage.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #35c9c5;");
@@ -119,6 +122,7 @@ public class Menu extends Application {
         scene.getStylesheets().add("styles.css");
         stage.setTitle("E-Ticketing Menu");
         stage.setScene(scene);
+
 
         // Set button actions
         registerButton.setOnAction(e -> {
