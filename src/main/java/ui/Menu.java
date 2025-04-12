@@ -1,12 +1,11 @@
 package ui;
 
 import java.sql.Connection;
-
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.layout.*;
@@ -16,20 +15,12 @@ import services.TicketService;
 import utils.DatabaseConnection;
 import utils.PasswordUtils;
 import utils.Utils;
-
-//import javafx.application.Application;
-//import javafx.scene.Scene;
-//import javafx.scene.control.Button;
-//import javafx.scene.layout.StackPane;
-//import javafx.stage.Stage;
-
 import javax.xml.transform.Result;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.ArrayList;
-
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -127,7 +118,7 @@ public class Menu extends Application {
         // Set button actions
         registerButton.setOnAction(e -> {
             try {
-                register(conn);
+                showRegisterMenu(stage);
             } catch (Exception ex) {
                 System.out.println("Error during registration: " + ex.getMessage());
             }
@@ -143,68 +134,225 @@ public class Menu extends Application {
 
         exitButton.setOnAction(e -> {
             // Display the exit message
+            delay(0, stage);
             buttonMessage.setText("Exiting...");
-
-            // Close the database connection and delay the exit to allow the label to be displayed
-            javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(2));
-            delay.setOnFinished(event -> {
-                // Close the database connection
-                try {
-                    if (conn != null && !conn.isClosed()) {
-                        conn.close();
-                        System.out.println("Database connection closed.");
-                    }
-                } catch (SQLException ex) {
-                    System.out.println("Error closing database connection: " + ex.getMessage());
-                }
-                System.exit(0);
             });
-            delay.play();
-        });
-
         stage.show();
     }
 
-    private void showLoginMenu(Stage stage) {
+    private void showRegisterMenu(Stage stage) {
+        VBox form = new VBox(10);
+
+        Label registerMessage = new Label("");
+        registerMessage.getStyleClass().add("register-message-label");
+
+        // Create a StackPane and set the background color
+        StackPane stackPane = new StackPane();
+        stackPane.setStyle("-fx-background-color: #423f3f;"); // Gray background
+        StackPane.setAlignment(registerMessage, Pos.BOTTOM_CENTER);
+        stackPane.getChildren().add(registerMessage);
+
+        // Name field
+        Label nameLabel = new Label("Name:");
+        nameLabel.setPrefWidth(150);
+        javafx.scene.control.TextField nameField = new javafx.scene.control.TextField();
+        nameField.setPrefWidth(200);
+
+        // Email field
         Label emailLabel = new Label("Email:");
-        emailLabel.setPrefWidth(100); // Setează lățimea preferată
+        emailLabel.setPrefWidth(150);
         javafx.scene.control.TextField emailField = new javafx.scene.control.TextField();
-        emailField.setPrefWidth(200); // Setează lățimea câmpului de text
+        emailField.setPrefWidth(200);
 
+        // Password field
         Label passwordLabel = new Label("Password:");
-        passwordLabel.setPrefWidth(100); // Setează lățimea preferată
+        passwordLabel.setPrefWidth(150);
         javafx.scene.control.PasswordField passwordField = new javafx.scene.control.PasswordField();
-        passwordField.setPrefWidth(200); // Setează lățimea câmpului de text
+        passwordField.setPrefWidth(200);
 
-        Button loginButton = new Button("Login");
-        Button backButton = new Button("Back");
+        // Address field
+        Label addressLabel = new Label("Address:");
+        addressLabel.setPrefWidth(150);
+        javafx.scene.control.TextField addressField = new javafx.scene.control.TextField();
+        addressField.setPrefWidth(200);
 
-        backButton.setOnAction(e -> start(stage)); // Revine la meniul principal
+        // Phone number field
+        Label phoneLabel = new Label("Phone Number:");
+        phoneLabel.setPrefWidth(150);
+        javafx.scene.control.TextField phoneField = new javafx.scene.control.TextField();
+        phoneField.setPrefWidth(200);
 
-        loginButton.setOnAction(e -> {
+        // Add CSS styles to labels
+        nameLabel.getStyleClass().add("register-label");
+        emailLabel.getStyleClass().add("register-label");
+        passwordLabel.getStyleClass().add("register-label");
+        addressLabel.getStyleClass().add("register-label");
+        phoneLabel.getStyleClass().add("register-label");
+
+        HBox nameRow = new HBox(10, nameLabel, nameField);
+        nameRow.setAlignment(Pos.CENTER);
+        HBox emailRow = new HBox(10, emailLabel, emailField);
+        emailRow.setAlignment(Pos.CENTER);
+        HBox passwordRow = new HBox(10, passwordLabel, passwordField);
+        passwordRow.setAlignment(Pos.CENTER);
+        HBox addressRow = new HBox(10, addressLabel, addressField);
+        addressRow.setAlignment(Pos.CENTER);
+        HBox phoneRow = new HBox(10, phoneLabel, phoneField);
+        phoneRow.setAlignment(Pos.CENTER);
+        form.getChildren().addAll(nameRow, emailRow, passwordRow, addressRow, phoneRow);
+        form.setAlignment(Pos.CENTER);
+
+        // Submit button
+        Button submitButton = new Button("Register");
+        submitButton.setOnAction(e -> {
+            String name = nameField.getText();
             String email = emailField.getText();
             String password = passwordField.getText();
-            User user = login(conn, email, password);
-            if (user != null) {
-                userLoggedIn = true;
-                userMenu(user, conn);
+            String address = addressField.getText();
+            String phone = phoneField.getText();
+
+            if (name.isEmpty() || email.isEmpty() || password.isEmpty() || address.isEmpty() || phone.isEmpty()) {
+                registerMessage.setStyle("-fx-text-fill: red;");
+                registerMessage.setText("All fields must be filled out!");
+
+                System.out.println("All fields must be filled out!");
+                return;
+            }
+
+            // Call the register method with the collected data
+            Customer customer = new Customer(name, email, password, 5000, address, phone);
+            CustomerDAO customerDAO = new CustomerDAO();
+            if (customerDAO.addUser(customer)) {
+
+                registerMessage.setStyle("-fx-text-fill: green;");
+                registerMessage.setText("Registration successful!");
+
+                delay(1, stage);
+                System.out.println("Registration successful!");
             } else {
-                System.out.println("Login failed. Please try again.");
+                System.out.println("Registration failed.");
             }
         });
 
-        // Folosește un HBox pentru fiecare rând
+        // Back button
+        Button backButton = new Button("Back");
+        backButton.setOnAction(e -> start(stage));
+
+        // Set button styles
+        submitButton.setPrefSize(200, 50);
+        backButton.setPrefSize(200, 50);
+
+        // HBox for buttons
+        HBox buttonBox = new HBox(10);
+        buttonBox.getChildren().addAll(submitButton, backButton);
+        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.setPadding(new Insets(0, 0, 50, 0));
+
+
+        // BorderPane for layout
+        BorderPane borderPane = new BorderPane();
+        borderPane.setCenter(form);
+
+        // Add the button box to the bottom of the BorderPane
+        borderPane.setBottom(buttonBox);
+
+        stackPane.getChildren().addAll(borderPane);
+
+        // Set the scene
+        Scene registerScene = new Scene(stackPane, 1280, 720);
+        registerScene.getStylesheets().add("styles.css");
+        stage.setScene(registerScene);
+    }
+
+    private void showLoginMenu(Stage stage) {
+        VBox form = new VBox(10);
+
+        Label loginMessage = new Label("");
+        loginMessage.getStyleClass().add("register-message-label");
+
+        // Create a StackPane and set the background color
+        StackPane stackPane = new StackPane();
+        stackPane.setStyle("-fx-background-color: #423f3f;"); // Gray background
+        StackPane.setAlignment(loginMessage, Pos.BOTTOM_CENTER);
+        stackPane.getChildren().add(loginMessage);
+
+        // Email field
+        Label emailLabel = new Label("Email:");
+        emailLabel.setPrefWidth(150);
+        javafx.scene.control.TextField emailField = new javafx.scene.control.TextField();
+        emailField.setPrefWidth(200);
+
+        // Password field
+        Label passwordLabel = new Label("Password:");
+        passwordLabel.setPrefWidth(150);
+        javafx.scene.control.TextField passwordField = new javafx.scene.control.TextField();
+        passwordField.setPrefWidth(200);
+
+        emailLabel.getStyleClass().add("register-label");
+        passwordLabel.getStyleClass().add("register-label");
+
         HBox emailRow = new HBox(10, emailLabel, emailField);
         emailRow.setAlignment(Pos.CENTER);
-
         HBox passwordRow = new HBox(10, passwordLabel, passwordField);
         passwordRow.setAlignment(Pos.CENTER);
 
-        VBox vbox = new VBox(10);
-        vbox.getChildren().addAll(emailRow, passwordRow, loginButton, backButton);
-        vbox.setAlignment(Pos.CENTER);
+        form.getChildren().addAll(emailRow, passwordRow);
+        form.setAlignment(Pos.CENTER);
 
-        Scene loginScene = new Scene(vbox, 1280, 720);
+        // Submit button
+        Button submitButton = new Button("Login");
+        submitButton.setOnAction(e -> {
+            String email = emailField.getText();
+            String password = passwordField.getText();
+
+            if (email.isEmpty() || password.isEmpty() ) {
+                loginMessage.setStyle("-fx-text-fill: red;");
+                loginMessage.setText("All fields must be filled out!");
+
+                System.out.println("All fields must be filled out!");
+                return;
+            }
+
+            try{
+                delay(2, stage);
+                User user = login(getConn(), email, password);
+                userMenu(user, getConn());
+            }
+            catch (Exception ex) {
+                loginMessage.setStyle("-fx-text-fill: red;");
+                loginMessage.setText("Login failed. Please try again.");
+
+                System.out.println("Login failed. Please try again.");
+                return;
+            }
+        });
+
+        // Back button
+        Button backButton = new Button("Back");
+        backButton.setOnAction(e -> start(stage));
+
+        // Set button styles
+        submitButton.setPrefSize(200, 50);
+        backButton.setPrefSize(200, 50);
+
+        // HBox for buttons
+        HBox buttonBox = new HBox(10);
+        buttonBox.getChildren().addAll(submitButton, backButton);
+        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.setPadding(new Insets(0, 0, 50, 0));
+
+
+        // BorderPane for layout
+        BorderPane borderPane = new BorderPane();
+        borderPane.setCenter(form);
+
+        // Add the button box to the bottom of the BorderPane
+        borderPane.setBottom(buttonBox);
+
+        stackPane.getChildren().addAll(borderPane);
+
+        // Set the scene
+        Scene loginScene = new Scene(stackPane, 1280, 720);
         loginScene.getStylesheets().add("styles.css");
         stage.setScene(loginScene);
     }
@@ -254,65 +402,6 @@ public class Menu extends Application {
 //        } while(option != 3);
 //    }
 
-    public boolean register(Connection conn) {
-        // Regex patterns and matchers
-        String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
-        String phoneRegex = "^\\+?[0-9]{10,15}$";
-        Pattern emailPattern = Pattern.compile(emailRegex);
-        Pattern phonePattern = Pattern.compile(phoneRegex);
-        Matcher emailMatcher;
-        Matcher phoneMatcher;
-
-
-        System.out.println("\n\n=== Register ===");
-        System.out.print("Enter name: ");
-        String name = Scanner.nextLine();
-        System.out.print("Enter email: ");
-        String email = Scanner.nextLine();
-        emailMatcher = emailPattern.matcher(email);
-        while (!emailMatcher.matches()) {
-            System.out.println("Invalid email format.");
-            Utils.sleep(1);
-            System.out.print("Enter email: ");
-            email = Scanner.nextLine();
-            emailMatcher = emailPattern.matcher(email);
-        }
-        System.out.print("Enter password: ");
-        String password = Scanner.nextLine();
-        while (password.length() < 8) {
-            System.out.println("Password must be at least 8 characters long.");
-            Utils.sleep(1);
-            System.out.print("Enter password: ");
-            password = Scanner.nextLine();
-        }
-        System.out.print("Enter address: ");
-        String address = Scanner.nextLine();
-        System.out.print("Enter phone number: ");
-        String phoneNumber = Scanner.nextLine();
-        phoneMatcher = phonePattern.matcher(phoneNumber);
-        while (!phoneMatcher.matches()) {
-            System.out.println("Invalid phone number format.");
-            Utils.sleep(1);
-            System.out.print("Enter phone number: ");
-            phoneNumber = Scanner.nextLine();
-            phoneMatcher = phonePattern.matcher(phoneNumber);
-        }
-
-        Customer customer = new Customer(name, email, password, 5000, address, phoneNumber);
-        CustomerDAO customerDAO = new CustomerDAO();
-
-        System.out.println("Registering user...");
-        if (customerDAO.addUser(customer)) {
-            Utils.sleep(1);
-            System.out.println("Registration successful!");
-        } else {
-            Utils.sleep(1);
-            System.out.println("Registration failed.");
-        }
-        Utils.sleep(1);
-        return true;
-    }
-
     public User login(Connection conn, String email, String password) {
         String query = "SELECT * FROM users WHERE email = ?";
         try (PreparedStatement smtm = conn.prepareStatement(query)) {
@@ -327,6 +416,8 @@ public class Menu extends Application {
                     System.out.println("Welcome, " + rs.getString("name") + "!");
                     Utils.sleep(1);
 
+                    System.out.println("SUCCESFUL LOGIN");
+
                     return users.get((rs.getString("email")));
                 }
             }
@@ -337,47 +428,10 @@ public class Menu extends Application {
     }
 
     private void userMenu(User user, Connection conn){
-        int option;
 
-        do{
-            System.out.println("\n=== User Menu ===");
-            System.out.println("Balance: " + user.getBalance() + "$");
-            System.out.println("1. View Profile");
-            System.out.println("2. Update Profile");
-            System.out.println("3. My tickets");
-            System.out.println("4. Events");
-            System.out.println("5. Logout");
-            System.out.print("Select an option: ");
+        System.out.println("A INTRAT IN MENIU");
 
-            option = Scanner.nextInt();
-            Scanner.nextLine(); // Consume newline
-
-            switch(option){
-                case 1:
-                    System.out.println("Viewing profile...");
-                    // Call view profile method
-                    break;
-                case 2:
-                    System.out.println("Updating profile...");
-                    // Call update profile method
-                    break;
-                case 3:
-                    // de lucrat
-                    break;
-                case 4:
-                    System.out.println("Viewing events...");
-                    this.showEvents(conn, user);
-                    break;
-                case 5:
-                    userLoggedIn = false;
-                    System.out.println("Logging out...");
-                    Utils.sleep(1);
-                    break;
-                default:
-                    System.out.println("Invalid option. Please try again.");
-            }
-        } while(userLoggedIn);
-    }
+        }
 
     private void showEvents(Connection conn, User user) {
         Utils.sleep(1);
@@ -474,7 +528,32 @@ public class Menu extends Application {
         }
     }
 
+    private void delay(int type, Stage stage) {
+        javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(1.5));
+        delay.setOnFinished(event -> {
+            if(type==0) {
+                try {
+                    if (conn != null && !conn.isClosed()) {
+                        conn.close();
+                        System.out.println("Database connection closed.");
+                    }
+                } catch (SQLException ex) {
+                    System.out.println("Error closing database connection: " + ex.getMessage());
+                }
+                System.exit(0);
+            }
+            else if(type==1) {
+                start(stage);
+            }
+            else if(type==2) {
+                System.out.println("ceva");
+            }
+        });
+        delay.play();
+    }
+
     public static Connection getConn() {
         return conn;
     }
+
 }

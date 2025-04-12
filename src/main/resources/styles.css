@@ -1,6 +1,7 @@
 /* Button styling */
 .button {
     -fx-font-size: 16px;
+    -fx-font-family: "Comic Sans MS";
     -fx-background-color: #35c9c5;
     -fx-text-fill: white;
     -fx-background-radius: 10;
@@ -18,6 +19,20 @@
     -fx-font-size: 50px;
     -fx-text-fill: #35c9c5;
     -fx-font-weight: bold;
-    -fx-padding: 30 0 0 0; /* Padding-top */
-    -fx-font-family: "Curlz MT";
+    -fx-padding: 50 0 0 0; /* Padding-top */
+    -fx-font-family: "Comic Sans MS";
+}
+
+.register-label {
+    -fx-font-size: 20px;
+    -fx-text-fill: #35c9c5;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 0 0px;
+    -fx-font-family: "Comic Sans MS";
+}
+.register-message-label {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 0 0px;
+    -fx-font-family: "Comic Sans MS";
 }

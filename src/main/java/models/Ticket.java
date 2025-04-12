@@ -11,12 +11,12 @@ import static models.UserDAO.connection;
 
 public abstract class Ticket<T extends Event> {
     protected final int id;
-    protected float price;
+    protected double price;
     protected T event;
     protected User user;
     protected static int counter;
 
-    protected Ticket(float price, T event, User user) {
+    protected Ticket(double price, T event, User user) {
         this.id = counter;
         this.price = price;
         this.event = event;
@@ -36,11 +36,13 @@ public abstract class Ticket<T extends Event> {
         return id;
     }
 
-
-    public abstract float getPrice();
-    public void setPrice(float price) {
+    public double getPrice() {
+        return price; }
+    public void setPrice(double price) {
         this.price = price;
     }
+
+    public abstract double calculatePrice();
 
     public T getEvent() {
         return event;

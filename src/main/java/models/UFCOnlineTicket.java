@@ -3,14 +3,13 @@ package models;
 public class UFCOnlineTicket extends Ticket<UFCOnline> {
     protected String accesCode;
 
-    public UFCOnlineTicket(float price, UFCOnline event, User user, String accesCode) {
+    public UFCOnlineTicket(double price, UFCOnline event, User user, String accesCode) {
         super(price, event, user);
         this.accesCode = accesCode;
     }
-    
 
     @Override
-    public float getPrice() {
+    public double calculatePrice() {
         return price;
     }
 
