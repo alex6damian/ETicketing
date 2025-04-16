@@ -28,6 +28,7 @@ import javafx.stage.Stage;
 
 public class Menu extends Application {
     private static boolean userLoggedIn;
+    private static User user;
     private static Menu instance;
     private final Scanner Scanner;
     protected ArrayList<Event> events;
@@ -262,6 +263,7 @@ public class Menu extends Application {
         Scene registerScene = new Scene(stackPane, 1280, 720);
         registerScene.getStylesheets().add("styles.css");
         stage.setScene(registerScene);
+        stage.setTitle("Register");
     }
 
     private void showLoginMenu(Stage stage) {
@@ -314,9 +316,11 @@ public class Menu extends Application {
             }
 
             try{
+                User userConnected = login(getConn(), email, password);
+                setUser(userConnected);
+                loginMessage.setStyle("-fx-text-fill: green");
+                loginMessage.setText("Logging in...");
                 delay(2, stage);
-                User user = login(getConn(), email, password);
-                userMenu(user, getConn());
             }
             catch (Exception ex) {
                 loginMessage.setStyle("-fx-text-fill: red;");
@@ -355,6 +359,8 @@ public class Menu extends Application {
         Scene loginScene = new Scene(stackPane, 1280, 720);
         loginScene.getStylesheets().add("styles.css");
         stage.setScene(loginScene);
+        stage.setTitle("Login");
+        stage.show();
     }
 
 //    public void run()  {
@@ -411,12 +417,8 @@ public class Menu extends Application {
                 String hashedPassword = rs.getString("password");
                 if (PasswordUtils.checkPassword(password, hashedPassword)) {
                     System.out.println("Logging in...");
-                    Utils.sleep(1);
                     System.out.println("Login successful!");
                     System.out.println("Welcome, " + rs.getString("name") + "!");
-                    Utils.sleep(1);
-
-                    System.out.println("SUCCESFUL LOGIN");
 
                     return users.get((rs.getString("email")));
                 }
@@ -427,26 +429,129 @@ public class Menu extends Application {
         return null;
     }
 
-    private void userMenu(User user, Connection conn){
+    private void showUserMenu(User user, Stage stage){
+        // Create a welcome message
+        Label welcomeMessage = new Label("Welcome, " + user.getName() + "!");
+        welcomeMessage.getStyleClass().add("custom-label");
 
-        System.out.println("A INTRAT IN MENIU");
+        // Create buttons
+        Button viewButton = new Button("View profile");
+        viewButton.setPrefSize(200, 50);
+        Button editButton = new Button("Edit profile");
+        editButton.setPrefSize(200, 50);
+        Button eventsButton = new Button("Events");
+        eventsButton.setPrefSize(200, 50);
+        Button ticketsButton = new Button("My tickets");
+        ticketsButton.setPrefSize(200, 50);
+        Button exitButton = new Button("Logout");
+        exitButton.setPrefSize(200, 50);
 
+        viewButton.getStyleClass().add("button");
+        editButton.getStyleClass().add("button");
+        eventsButton.getStyleClass().add("button");
+        ticketsButton.getStyleClass().add("button");
+        exitButton.getStyleClass().add("button");
+
+
+        // Create a VBox layout
+        VBox vbox = new VBox(10);
+        vbox.getChildren().addAll(viewButton, editButton, eventsButton, ticketsButton, exitButton);
+        vbox.setAlignment(Pos.CENTER);
+
+        // Create a BorderPane layout
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(welcomeMessage);
+        BorderPane.setAlignment(welcomeMessage, Pos.CENTER );
+        borderPane.setCenter(vbox);
+
+        // Create a StackPane to overlay the exit message
+        StackPane stackPane = new StackPane();
+        stackPane.getChildren().add(borderPane);
+
+        stackPane.setStyle("-fx-background-color: #423f3f;"); // Set background color
+
+        // Create a label for the exit message (initially hidden)
+        Label buttonMessage = new Label();
+        buttonMessage.getStyleClass().add("register-message-label");
+        StackPane.setAlignment(buttonMessage, Pos.BOTTOM_CENTER);
+        stackPane.getChildren().add(buttonMessage);
+
+
+        viewButton.setOnAction(e -> {
+            //Display profile
+            delay(3, stage);
+            buttonMessage.setStyle("-fx-text-fill: green;");
+            buttonMessage.setText("Viewing profile...");
+        });
+
+        exitButton.setOnAction(e -> {
+            // Display the exit message
+            delay(1, stage);
+            buttonMessage.setStyle("-fx-text-fill: yellow;");
+            buttonMessage.setText("Logging out...");
+        });
+
+        // Set the scene
+        Scene scene = new Scene(stackPane, 1280, 720);
+        scene.getStylesheets().add("styles.css");
+        stage.setTitle("Profile");
+        stage.setScene(scene);
+        stage.show();
         }
 
-    private void showEvents(Connection conn, User user) {
-        Utils.sleep(1);
-        int option;
-        System.out.println("\n=== Events ===");
-        for (int i=0; i < events.size(); i++) {
-            System.out.println(events.get(i));
-        }
-        System.out.println("\nSelect event to buy ticket: ");
-        option = Scanner.nextInt();
-        Scanner.nextLine();
-        TicketService.getInstance().buyFootballTicket(conn, (Customer) user, (FootballMatch) events.get(option-1), "Gold", 1);
-        ((FootballMatch) events.get(option-1)).sellTicket(1);
-//          La selectarea fiecarui eveniment, se va deschide un tab pentru a vedea
-//      detalii si pentru a cumpara bilet
+    private void viewProfile(Stage stage) {
+        // Create a welcome message
+        Label profileMessage = new Label("My profile");
+        profileMessage.getStyleClass().add("custom-label");
+
+        // Back button
+        Button backButton = new Button("Back");
+        backButton.setPrefSize(200, 50);
+
+        // Profile details
+        Label nameLabel = new Label("Name: " + getUser().getName());
+        Label emailLabel = new Label("Email: " + getUser().getEmail());
+        Label addressLabel = new Label("Address: " + ((Customer) getUser()).getAddress());
+        Label phoneLabel = new Label("Phone: " + ((Customer) getUser()).getPhoneNumber());
+
+        // Create a VBox layout
+        VBox vbox = new VBox(10);
+        vbox.getChildren().addAll(nameLabel, emailLabel, addressLabel, phoneLabel, backButton);
+        vbox.setAlignment(Pos.CENTER);
+
+        // Create a BorderPane layout
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(profileMessage);
+        BorderPane.setAlignment(profileMessage, Pos.CENTER);
+        borderPane.setCenter(vbox);
+
+        // Create a StackPane to overlay the exit message
+        StackPane stackPane = new StackPane();
+        stackPane.getChildren().add(borderPane);
+
+        stackPane.setStyle("-fx-background-color: #423f3f;"); // Set background color
+
+        // Create a label for the exit message (initially hidden)
+        Label buttonMessage = new Label();
+        buttonMessage.getStyleClass().add("register-message-label");
+        StackPane.setAlignment(buttonMessage, Pos.BOTTOM_CENTER);
+        stackPane.getChildren().add(buttonMessage);
+
+        backButton.setOnAction(e -> {
+            // Display the exit message
+            delay(2, stage);
+            buttonMessage.setStyle("-fx-text-fill: yellow;");
+            buttonMessage.setText("Returning...");
+        });
+
+        // Set the scene
+        Scene scene = new Scene(stackPane, 1280, 720);
+        scene.getStylesheets().add("styles.css");
+        stage.setTitle("My profile");
+        stage.setScene(scene);
+        stage.show();
+
+
     }
 
     private void loadUsers(Connection conn){
@@ -542,11 +647,14 @@ public class Menu extends Application {
                 }
                 System.exit(0);
             }
-            else if(type==1) {
+            else if(type == 1) {
                 start(stage);
             }
-            else if(type==2) {
-                System.out.println("ceva");
+            else if(type == 2) {
+                showUserMenu(getUser(), stage);
+            }
+            else if(type == 3) {
+                viewProfile(stage);
             }
         });
         delay.play();
@@ -554,6 +662,14 @@ public class Menu extends Application {
 
     public static Connection getConn() {
         return conn;
+    }
+
+    private static void setUser(User user) {
+        Menu.user = user;
+    }
+
+    private static User getUser() {
+        return user;
     }
 
 }
