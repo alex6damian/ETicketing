@@ -1,6 +1,6 @@
 package models;
 
-public abstract class Event {
+public abstract class Event implements Comparable<Event> {
     int eventId;
     String date;
     String time;
@@ -56,6 +56,11 @@ public abstract class Event {
 //        eventCount++;
 //    }`
 
+    @Override
+    public int compareTo(Event obj) {
+        return this.date.compareTo(obj.date);
+    }
+
     public String toString() {
         return "\nEvent id: " + this.getEventId() +
                 "\nEvent name: " + this.getEventName() +
@@ -64,4 +69,5 @@ public abstract class Event {
                 ", Location: " + this.getLocation() +
                 ", Description: " + this.getDescription();
         }
-    }
+
+}

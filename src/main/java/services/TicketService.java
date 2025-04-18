@@ -93,6 +93,38 @@ public class TicketService {
         return ticket;
     }
 
+    public UFCOnlineTicket buyUFCOnlineTicket(Connection conn, User user, UFCOnline event, String accessCode) {
+        UFCOnlineTicket ticket = new UFCOnlineTicket(event, user, accessCode);
+        String insertQuery = "INSERT INTO tickets (id, user_id, event_id, price, type, access_code) VALUES (?, ?, ?, ?, ?, ?)";
+        String selectQuery = "SELECT id FROM tickets WHERE user_id = ? AND event_id = ? AND access_code = ?";
+
+        try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
+            PreparedStatement selectStmt = conn.prepareStatement(selectQuery)) {
+
+            double price = ticket.calculatePrice();
+            ticket.setPrice(price);
+
+            // Insert the ticket into the database
+            insertStmt.setInt(1, ticket.getId());
+            insertStmt.setInt(2, user.getId());
+            insertStmt.setInt(3, event.getEventId());
+            insertStmt.setDouble(4, price);
+            insertStmt.setString(5, "UFCOnline");
+            insertStmt.setString(6, accessCode);
+            insertStmt.executeUpdate();
+
+            // Retrieve the generated ticket ID
+            selectStmt.setInt(1, user.getId());
+            selectStmt.setInt(2, event.getEventId());
+            selectStmt.setString(3, accessCode);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        updateBalance(user, ticket.getPrice());
+        return ticket;
+    }
+
     private void updateBalance(User user, double amount) {
         String updateQuery = "UPDATE users SET balance = ? WHERE id = ?";
         try (PreparedStatement stmt = Menu.getConn().prepareStatement(updateQuery)) {

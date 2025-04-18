@@ -9,7 +9,7 @@ import java.sql.ResultSet;
 
 import static models.UserDAO.connection;
 
-public abstract class Ticket<T extends Event> {
+public abstract class Ticket<T extends Event> implements Comparable<Ticket<T>> {
     protected final int id;
     protected double price;
     protected T event;
@@ -77,6 +77,11 @@ public abstract class Ticket<T extends Event> {
     @Override
     public String toString() {
         return "Ticket [id=" + id + ", price=" + price + ", event=" + event + "]";
+    }
+
+    @Override
+    public int compareTo(Ticket<T> other) {
+        return Double.compare(this.price, other.price);
     }
 }
 

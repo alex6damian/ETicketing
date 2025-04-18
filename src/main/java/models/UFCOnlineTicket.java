@@ -3,8 +3,8 @@ package models;
 public class UFCOnlineTicket extends Ticket<UFCOnline> {
     protected String accesCode;
 
-    public UFCOnlineTicket(double price, UFCOnline event, User user, String accesCode) {
-        super(price, event, user);
+    public UFCOnlineTicket(UFCOnline event, User user, String accesCode) {
+        super(1000, event, user);
         this.accesCode = accesCode;
     }
 

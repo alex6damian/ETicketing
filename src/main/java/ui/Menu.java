@@ -2,7 +2,7 @@ package ui;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import javafx.geometry.Insets;
@@ -18,9 +18,7 @@ import utils.Utils;
 import javax.xml.transform.Result;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Objects;
-import java.util.Scanner;
-import java.util.ArrayList;
+
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -105,7 +103,7 @@ public class Menu extends Application {
 
         // Create a label for the exit message (initially hidden)
         Label buttonMessage = new Label();
-        buttonMessage.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #35c9c5;");
+        buttonMessage.getStyleClass().add("register-message-label");
         StackPane.setAlignment(buttonMessage, Pos.BOTTOM_CENTER);
         stackPane.getChildren().add(buttonMessage);
 
@@ -136,6 +134,7 @@ public class Menu extends Application {
         exitButton.setOnAction(e -> {
             // Display the exit message
             delay(0, stage);
+            buttonMessage.setStyle("-fx-text-fill: yellow;");
             buttonMessage.setText("Exiting...");
             });
         stage.show();
@@ -476,7 +475,6 @@ public class Menu extends Application {
         StackPane.setAlignment(buttonMessage, Pos.BOTTOM_CENTER);
         stackPane.getChildren().add(buttonMessage);
 
-
         viewButton.setOnAction(e -> {
             //Display profile
             delay(3, stage);
@@ -628,6 +626,9 @@ public class Menu extends Application {
                     ));
                 }
             }
+            // Sort events by date
+            Collections.sort(events);
+
         } catch (SQLException e) {
             System.out.println("Error loading events: " + e.getMessage());
         }
@@ -673,3 +674,5 @@ public class Menu extends Application {
     }
 
 }
+
+// De adaugat sortare
