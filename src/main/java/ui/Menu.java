@@ -14,6 +14,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import models.*;
+import services.EventService;
 import services.TicketService;
 import utils.DatabaseConnection;
 import utils.PasswordUtils;
@@ -452,6 +453,13 @@ public class Menu extends Application {
             buttonMessage.setText("Viewing profile...");
         });
 
+        eventsButton.setOnAction(e -> {
+            // Display the events menu
+            delay(8, stage);
+            buttonMessage.setStyle("-fx-text-fill: green;");
+            buttonMessage.setText("Viewing events...");
+        });
+
         ticketsButton.setOnAction(e -> {
             // Display the tickets menu
             delay(4, stage);
@@ -529,6 +537,7 @@ public class Menu extends Application {
 
     }
 
+    // Tickets submenu
     private void showTicketsMenu(Stage stage) {
         // Create a welcome message
         Label ticketsMessage = new Label("Tickets menu");
@@ -820,6 +829,357 @@ public class Menu extends Application {
         stage.setScene(scene);
     }
 
+    // Event submenu
+    private void showEvents(Stage stage) {
+        // Create a welcome message
+        Label eventsMessage = new Label("View tickets details");
+        eventsMessage.getStyleClass().add("custom-label");
+
+        // Back button
+        Button backButton = new Button("Back");
+        backButton.setPrefSize(200, 50);
+
+        // Display the tickets
+        VBox vbox = new VBox(10);
+        vbox.setAlignment(Pos.CENTER);
+
+        Button footballButton = new Button("Football matches");
+        footballButton.setPrefSize(200, 50);
+
+        Button concertButton = new Button("Concerts");
+        concertButton.setPrefSize(200, 50);
+
+        Button ufcButton = new Button("Online UFC events");
+        ufcButton.setPrefSize(200, 50);
+
+        vbox.getChildren().addAll(footballButton, concertButton, ufcButton, backButton);
+
+        // Create a BorderPane layout
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(eventsMessage);
+        BorderPane.setAlignment(eventsMessage, Pos.CENTER);
+        borderPane.setCenter(vbox);
+
+        // Create a StackPane to overlay the exit message
+        StackPane stackPane = new StackPane();
+        stackPane.getChildren().add(borderPane);
+
+        stackPane.setStyle("-fx-background-color: #423f3f;"); // Set background color
+
+        // Create a label for the exit message (initially hidden)
+        Label buttonMessage = new Label();
+        buttonMessage.getStyleClass().add("register-message-label");
+        StackPane.setAlignment(buttonMessage, Pos.BOTTOM_CENTER);
+        stackPane.getChildren().add(buttonMessage);
+
+        footballButton.setOnAction(e -> {
+            // Display football matches
+            delay(9, stage);
+            buttonMessage.setStyle("-fx-text-fill: green;");
+            buttonMessage.setText("Viewing football matches...");
+        });
+
+        concertButton.setOnAction(e -> {
+            // Display concerts
+            delay(10, stage);
+            buttonMessage.setStyle("-fx-text-fill: green;");
+            buttonMessage.setText("Viewing concerts...");
+        });
+
+        ufcButton.setOnAction(e -> {
+            // Display UFC events
+            delay(11, stage);
+            buttonMessage.setStyle("-fx-text-fill: green;");
+            buttonMessage.setText("Viewing UFC events...");
+        });
+
+        backButton.setOnAction(e -> {
+            // Display the exit message
+            delay(2, stage);
+            buttonMessage.setStyle("-fx-text-fill: yellow;");
+            buttonMessage.setText("Returning...");
+        });
+
+        // Set the scene
+        Scene scene = new Scene(stackPane, 1280, 720);
+        scene.getStylesheets().add("styles.css");
+        stage.setTitle("View tickets");
+        stage.setScene(scene);
+    }
+
+    private void showFootballMatches(Stage stage) {
+        // Create a welcome message
+        Label footballMessage = new Label("Football matches");
+        footballMessage.getStyleClass().add("custom-label");
+
+        // Back button
+        Button backButton = new Button("Back");
+        backButton.setPrefSize(200, 50);
+
+        // Display the tickets
+        VBox vbox = new VBox(10);
+        vbox.setAlignment(Pos.CENTER);
+
+        // Create a label for the exit message (initially hidden)
+        Label buttonMessage = new Label();
+        buttonMessage.getStyleClass().add("register-message-label");
+
+        for (Event event : events) {
+            if(!(event instanceof FootballMatch)) {
+                continue;
+            }
+            Button eventButton = new Button(event.getEventName());
+            eventButton.setPrefSize(400, 50);
+            eventButton.setOnAction(e -> {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Event Details");
+                alert.setHeaderText("Details for: " + event.getEventName());
+                alert.setContentText(event.toString());
+
+                ButtonType purchaseButton = new ButtonType("Purchase");
+                ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+                alert.getButtonTypes().setAll(purchaseButton, cancelButton);
+
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.isPresent() && result.get() == purchaseButton) {
+                    // Create a ChoiceDialog for bundle selection
+                    List<String> bundleOptions = Arrays.asList("Standard", "Gold", "Gold+");
+                    ChoiceDialog<String> bundleDialog = new ChoiceDialog<>(bundleOptions.get(0), bundleOptions);
+                    bundleDialog.setTitle("Select Bundle");
+                    bundleDialog.setHeaderText("Choose a bundle for the event: " + event.getEventName() +
+                            "\nStandard: 500$\n" +
+                            "Gold: 1500$\n" +
+                            "Gold+: 2500$");
+                    bundleDialog.setContentText("Available bundles:");
+
+                    Optional<String> selectedBundle = bundleDialog.showAndWait();
+                    selectedBundle.ifPresent(bundle -> {
+                        System.out.println("Selected bundle: " + bundle);
+                        TicketService.getInstance().buyFootballTicket(getConn(), getUser(), (FootballMatch) event, bundle, ((FootballMatch) event).getSeatsAvailable());
+                    });
+                    buttonMessage.setStyle("-fx-text-fill: green;");
+                    buttonMessage.setText("Ticket purchased for event: " + event.getEventName());
+                    System.out.println("Ticket purchased for event: " + event.getEventName());
+
+                } else {
+                    System.out.println("Purchase canceled.");
+                    buttonMessage.setStyle("-fx-text-fill: yellow;");
+                    buttonMessage.setText("Purchase canceled.");
+                }
+                });
+            vbox.getChildren().add(eventButton);
+        }
+        vbox.getChildren().add(backButton);
+
+        // Create a BorderPane layout
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(footballMessage);
+        BorderPane.setAlignment(footballMessage, Pos.CENTER);
+        borderPane.setCenter(vbox);
+
+        // Create a StackPane to overlay the exit message
+        StackPane stackPane = new StackPane();
+        stackPane.getChildren().add(borderPane);
+
+        stackPane.setStyle("-fx-background-color: #423f3f;"); // Set background color
+
+        StackPane.setAlignment(buttonMessage, Pos.BOTTOM_CENTER);
+        stackPane.getChildren().add(buttonMessage);
+
+        backButton.setOnAction(e -> {
+            // Display the exit message
+            delay(8, stage);
+            buttonMessage.setStyle("-fx-text-fill: yellow;");
+            buttonMessage.setText("Returning...");
+        });
+
+        // Set the scene
+        Scene scene = new Scene(stackPane, 1280, 720);
+        scene.getStylesheets().add("styles.css");
+        stage.setTitle("Transfer tickets");
+        stage.setScene(scene);
+    }
+
+    private void showConcerts(Stage stage) {
+        // Create a welcome message
+        Label concertMessage = new Label("Concerts");
+        concertMessage.getStyleClass().add("custom-label");
+
+        // Back button
+        Button backButton = new Button("Back");
+        backButton.setPrefSize(200, 50);
+
+        // Display the tickets
+        VBox vbox = new VBox(10);
+        vbox.setAlignment(Pos.CENTER);
+
+        // Create a label for the exit message (initially hidden)
+        Label buttonMessage = new Label();
+        buttonMessage.getStyleClass().add("register-message-label");
+
+        for (Event event : events) {
+            if(!(event instanceof Concert)) {
+                continue;
+            }
+            Button eventButton = new Button(event.getEventName());
+            eventButton.setPrefSize(400, 50);
+            eventButton.setOnAction(e -> {
+                // Create a dialog to input the recipient's email
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Event Details");
+                alert.setHeaderText("Details for: " + event.getEventName());
+                alert.setContentText(event.toString());
+
+                ButtonType purchaseButton = new ButtonType("Purchase");
+                ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+                alert.getButtonTypes().setAll(purchaseButton, cancelButton);
+
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.isPresent() && result.get() == purchaseButton) {
+                    // Create a ChoiceDialog for bundle selection
+                    List<String> rowOptions = Arrays.asList("A", "B", "C");
+                    ChoiceDialog<String> rowDialog = new ChoiceDialog<>(rowOptions.get(0), rowOptions);
+                    rowDialog.setTitle("Select Row");
+                    rowDialog.setHeaderText("Choose your row for the event: " + event.getEventName() +
+                            "\nA: 1000$\n" +
+                            "B: 600$\n" +
+                            "C: 200$");
+                    rowDialog.setContentText("Available Rows:");
+
+                    Optional<String> selectedRow = rowDialog.showAndWait();
+                    selectedRow.ifPresent(row -> {
+                        System.out.println("Selected row: " + row);
+                        TicketService.getInstance().buyConcertTicket(getConn(), getUser(), (Concert) event, row);
+                    });
+                    buttonMessage.setStyle("-fx-text-fill: green;");
+                    buttonMessage.setText("Ticket purchased for event: " + event.getEventName());
+                    System.out.println("Ticket purchased for event: " + event.getEventName());
+
+                } else {
+                    System.out.println("Purchase canceled.");
+                    buttonMessage.setStyle("-fx-text-fill: yellow;");
+                    buttonMessage.setText("Purchase canceled.");
+                }
+            });
+            vbox.getChildren().add(eventButton);
+        }
+        vbox.getChildren().add(backButton);
+
+        // Create a BorderPane layout
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(concertMessage);
+        BorderPane.setAlignment(concertMessage, Pos.CENTER);
+        borderPane.setCenter(vbox);
+
+        // Create a StackPane to overlay the exit message
+        StackPane stackPane = new StackPane();
+        stackPane.getChildren().add(borderPane);
+
+        stackPane.setStyle("-fx-background-color: #423f3f;"); // Set background color
+
+        StackPane.setAlignment(buttonMessage, Pos.BOTTOM_CENTER);
+        stackPane.getChildren().add(buttonMessage);
+
+        backButton.setOnAction(e -> {
+            // Display the exit message
+            delay(8, stage);
+            buttonMessage.setStyle("-fx-text-fill: yellow;");
+            buttonMessage.setText("Returning...");
+        });
+
+        // Set the scene
+        Scene scene = new Scene(stackPane, 1280, 720);
+        scene.getStylesheets().add("styles.css");
+        stage.setTitle("Concerts");
+        stage.setScene(scene);
+    }
+
+    private void showUFCOnline(Stage stage) {
+        // Create a welcome message
+        Label concertMessage = new Label("Concerts");
+        concertMessage.getStyleClass().add("custom-label");
+
+        // Back button
+        Button backButton = new Button("Back");
+        backButton.setPrefSize(200, 50);
+
+        // Display the tickets
+        VBox vbox = new VBox(10);
+        vbox.setAlignment(Pos.CENTER);
+
+        // Create a label for the exit message (initially hidden)
+        Label buttonMessage = new Label();
+        buttonMessage.getStyleClass().add("register-message-label");
+
+        for (Event event : events) {
+            if(!(event instanceof UFCOnline)) {
+                continue;
+            }
+            Button eventButton = new Button(event.getEventName());
+            eventButton.setPrefSize(400, 50);
+            eventButton.setOnAction(e -> {
+                // Create a dialog to input the recipient's email
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Event Details");
+                alert.setHeaderText("Details for: " + event.getEventName() +
+                        "\nPrices: Kickboxing: 2000$\n" +
+                        "MMA: 3000$\n" +
+                        "Taekwando: 4000$");
+                alert.setContentText(event.toString());
+
+                ButtonType purchaseButton = new ButtonType("Purchase");
+                ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+                alert.getButtonTypes().setAll(purchaseButton, cancelButton);
+
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.isPresent() && result.get() == purchaseButton){
+                    String accessCode = UUID.randomUUID().toString();
+                    TicketService.getInstance().buyUFCOnlineTicket(getConn(), getUser(), (UFCOnline) event, accessCode);
+                    buttonMessage.setStyle("-fx-text-fill: green;");
+                    buttonMessage.setText("Ticket purchased for event: " + event.getEventName());
+
+                } else {
+                    System.out.println("Purchase canceled.");
+                    buttonMessage.setStyle("-fx-text-fill: yellow;");
+                    buttonMessage.setText("Purchase canceled.");
+                }
+            });
+            vbox.getChildren().add(eventButton);
+        }
+        vbox.getChildren().add(backButton);
+
+        // Create a BorderPane layout
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(concertMessage);
+        BorderPane.setAlignment(concertMessage, Pos.CENTER);
+        borderPane.setCenter(vbox);
+
+        // Create a StackPane to overlay the exit message
+        StackPane stackPane = new StackPane();
+        stackPane.getChildren().add(borderPane);
+
+        stackPane.setStyle("-fx-background-color: #423f3f;"); // Set background color
+
+        StackPane.setAlignment(buttonMessage, Pos.BOTTOM_CENTER);
+        stackPane.getChildren().add(buttonMessage);
+
+        backButton.setOnAction(e -> {
+            // Display the exit message
+            delay(8, stage);
+            buttonMessage.setStyle("-fx-text-fill: yellow;");
+            buttonMessage.setText("Returning...");
+        });
+
+        // Set the scene
+        Scene scene = new Scene(stackPane, 1280, 720);
+        scene.getStylesheets().add("styles.css");
+        stage.setTitle("UFC Matches");
+        stage.setScene(scene);
+    }
+
     private void loadUsers(Connection conn){
         users = new HashMap<>();
         String query = "SELECT * FROM users";
@@ -946,7 +1306,7 @@ public class Menu extends Application {
     }
 
     private void delay(int type, Stage stage) {
-        PauseTransition delay = new PauseTransition(Duration.seconds(1)); // UPDATE: De modificat delay-ul dupa ce e gata
+        PauseTransition delay = new PauseTransition(Duration.seconds(0.1)); // TODO: Make it a parameter
         delay.setOnFinished(event -> {
             if(type == 0) {
                 try {
@@ -979,6 +1339,18 @@ public class Menu extends Application {
             }
             else if(type == 7) {
                 sellTickets(stage);
+            }
+            else if(type == 8) {
+                showEvents(stage);
+            }
+            else if(type == 9) {
+                showFootballMatches(stage);
+            }
+            else if(type == 10) {
+                showConcerts(stage);
+            }
+            else if(type == 11) {
+                showUFCOnline(stage);
             }
         });
         delay.play();

@@ -28,10 +28,10 @@ public class TicketService {
     public FootballTicket buyFootballTicket(Connection conn, User user, FootballMatch event, String bundle, int seat) {
         FootballTicket ticket = new FootballTicket(event, user, bundle, seat);
         String insertQuery = "INSERT INTO tickets (id, user_id, event_id, price, type, bundle, seat_number) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        String selectQuery = "SELECT id FROM tickets WHERE user_id = ? AND event_id = ? AND seat_number = ?";
+        event.setSeatsAvailable(seat-1);
+        EventService.getInstance().updateSeatsAvailable(conn, event.getEventId(), event.getSeatsAvailable());
 
-        try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
-             PreparedStatement selectStmt = conn.prepareStatement(selectQuery)) {
+        try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
 
             double price = ticket.calculatePrice();
             ticket.setPrice(price);
@@ -46,17 +46,12 @@ public class TicketService {
             insertStmt.setInt(7, seat);
             insertStmt.executeUpdate();
 
-            // Retrieve the generated ticket ID
-            selectStmt.setInt(1, user.getId());
-            selectStmt.setInt(2, event.getEventId());
-            selectStmt.setInt(3, seat);
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
         // Update the user's balance
-        updateBalance(user, ticket.getPrice());
+        updateBalance(user, -ticket.getPrice());
         return ticket;
     }
 
@@ -64,13 +59,10 @@ public class TicketService {
     public ConcertTicket buyConcertTicket(Connection conn, User user, Concert event, String row) {
         ConcertTicket ticket = new ConcertTicket(event, user, row);
         String insertQuery = "INSERT INTO tickets (id, user_id, event_id, price, type, row) VALUES (?, ?, ?, ?, ?, ?)";
-        String selectQuery = "SELECT id FROM tickets WHERE user_id = ? AND event_id = ? AND row = ?";
 
-        try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
-             PreparedStatement selectStmt = conn.prepareStatement(selectQuery)) {
+        try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
 
-            double price = ticket.calculatePrice();
-            ticket.setPrice(price);
+            double price = ticket.getPrice();
 
             // Insert the ticket into the database
             insertStmt.setInt(1, ticket.getId());
@@ -80,11 +72,6 @@ public class TicketService {
             insertStmt.setString(5, "Concert");
             insertStmt.setString(6, row);
             insertStmt.executeUpdate();
-
-            // Retrieve the generated ticket ID
-            selectStmt.setInt(1, user.getId());
-            selectStmt.setInt(2, event.getEventId());
-            selectStmt.setString(3, row);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -99,13 +86,10 @@ public class TicketService {
     public UFCOnlineTicket buyUFCOnlineTicket(Connection conn, User user, UFCOnline event, String accessCode) {
         UFCOnlineTicket ticket = new UFCOnlineTicket(event, user, accessCode);
         String insertQuery = "INSERT INTO tickets (id, user_id, event_id, price, type, access_code) VALUES (?, ?, ?, ?, ?, ?)";
-        String selectQuery = "SELECT id FROM tickets WHERE user_id = ? AND event_id = ? AND access_code = ?";
 
-        try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
-            PreparedStatement selectStmt = conn.prepareStatement(selectQuery)) {
+        try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
 
-            double price = ticket.calculatePrice();
-            ticket.setPrice(price);
+            double price = ticket.getPrice();
 
             // Insert the ticket into the database
             insertStmt.setInt(1, ticket.getId());
@@ -116,10 +100,6 @@ public class TicketService {
             insertStmt.setString(6, accessCode);
             insertStmt.executeUpdate();
 
-            // Retrieve the generated ticket ID
-            selectStmt.setInt(1, user.getId());
-            selectStmt.setInt(2, event.getEventId());
-            selectStmt.setString(3, accessCode);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -144,10 +124,10 @@ public class TicketService {
     // Method to sell a ticket
     public void sellTicket(Connection conn, int ticketId, User user) {
         String selectQuery = "SELECT price FROM tickets WHERE id = ? AND user_id = ?";
-        String deleteQuery = "DELETE FROM tickets WHERE id = ?";
+        String updateQuery = "UPDATE tickets SET user_id = NULL WHERE id = ?";
 
         try (PreparedStatement selectStmt = conn.prepareStatement(selectQuery);
-             PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery)) {
+             PreparedStatement updateStmt = conn.prepareStatement(updateQuery)) {
 
             // Validate ticket ownership and retrieve price
             selectStmt.setInt(1, ticketId);
@@ -158,8 +138,7 @@ public class TicketService {
                 double ticketPrice = rs.getDouble("price");
 
                 // Delete the ticket
-                deleteStmt.setInt(1, ticketId);
-                deleteStmt.executeUpdate();
+                updateStmt.setInt(1, user.getId());
 
                 updateBalance(user, -ticketPrice); // Deduct the ticket price from the user's balance
 
@@ -176,7 +155,7 @@ public class TicketService {
     private void updateBalance(User user, double amount) {
         String updateQuery = "UPDATE users SET balance = ? WHERE id = ?";
         try (PreparedStatement stmt = Menu.getConn().prepareStatement(updateQuery)) {
-            stmt.setDouble(1, user.getBalance() - amount);
+            stmt.setDouble(1, user.getBalance() + amount);
             stmt.setInt(2, user.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {

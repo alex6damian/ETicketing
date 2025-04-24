@@ -34,6 +34,7 @@ public abstract class Ticket<T extends Event> implements Comparable<Ticket<T>> {
     static
     {
         counter = getTicketCount();
+        System.out.println("Ticket count: " + counter); // Debugging log
     }
 
     {
