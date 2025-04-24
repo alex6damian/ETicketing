@@ -8,6 +8,12 @@ public class UFCOnlineTicket extends Ticket<UFCOnline> {
         this.accesCode = accesCode;
     }
 
+    // Constructor for loading from database
+    public UFCOnlineTicket(UFCOnline event, User user, String accesCode, int id) {
+        super(1000, event, user, id);
+        this.accesCode = accesCode;
+    }
+
     @Override
     public double calculatePrice() {
         return price;

@@ -23,6 +23,14 @@ public abstract class Ticket<T extends Event> implements Comparable<Ticket<T>> {
         this.user = user;
     }
 
+    protected Ticket(double price, T event, User user, int id) {
+        this.id = id;
+        this.price = price;
+        this.event = event;
+        this.user = user;
+        counter--;
+    }
+
     static
     {
         counter = getTicketCount();
@@ -38,6 +46,7 @@ public abstract class Ticket<T extends Event> implements Comparable<Ticket<T>> {
 
     public double getPrice() {
         return price; }
+
     public void setPrice(double price) {
         this.price = price;
     }
@@ -47,6 +56,7 @@ public abstract class Ticket<T extends Event> implements Comparable<Ticket<T>> {
     public T getEvent() {
         return event;
     }
+
     public void setEvent(T event) {
         this.event = event;
     }
@@ -76,7 +86,7 @@ public abstract class Ticket<T extends Event> implements Comparable<Ticket<T>> {
 
     @Override
     public String toString() {
-        return "Ticket [id=" + id + ", price=" + price + ", event=" + event + "]";
+        return event.toString();
     }
 
     @Override

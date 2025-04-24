@@ -1,0 +1,3 @@
+BUG FIXES:
+Modified password field inside login menu
+Added tickets menu with all utilities, transfering tickets, selling tickets, viewing details.

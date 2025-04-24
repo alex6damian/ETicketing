@@ -62,12 +62,11 @@ public abstract class Event implements Comparable<Event> {
     }
 
     public String toString() {
-        return "\nEvent id: " + this.getEventId() +
-                "\nEvent name: " + this.getEventName() +
-                ", Date: " + this.getDate() +
-                ", Time: " + this.getTime() +
-                ", Location: " + this.getLocation() +
-                ", Description: " + this.getDescription();
+        return "\nEvent name: " + this.getEventName() +
+                "\nDate: " + this.getDate() +
+                "\nTime: " + this.getTime() +
+                "\nLocation: " + this.getLocation() +
+                "\nDescription: " + this.getDescription();
         }
 
 }

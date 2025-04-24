@@ -9,6 +9,12 @@ public class ConcertTicket extends Ticket<Concert> {
         this.setPrice(this.calculatePrice());
     }
 
+    // Constructor for loading from database
+    public ConcertTicket(Concert concert, User user, String row, int id) {
+        super(200, concert, user, id);
+        this.row = row;
+    }
+
     @Override
     public double calculatePrice() {
         switch (row) {

@@ -11,6 +11,14 @@ public class FootballTicket extends Ticket<FootballMatch> {
         this.setPrice(calculatePrice());
     }
 
+    // Constructor for loading from database
+    public FootballTicket(FootballMatch event, User user, String bundle, int seat, int id) {
+        super(500, event, user, id);
+        this.bundle = bundle;
+        this.seat = seat;
+        this.setPrice(calculatePrice());
+    }
+
     @Override
     public double calculatePrice() {
         switch (bundle) {
@@ -28,7 +36,8 @@ public class FootballTicket extends Ticket<FootballMatch> {
 
     @Override
     public String toString() {
-        super.toString();
-        return ", bundle: " + bundle + ", seat: " + seat + ", price: " + price;
+        return super.toString() + "\nBundle: " + bundle +
+                "\nSeat number: " + seat +
+                "\nPrice: " + price + "$";
     }
 }
