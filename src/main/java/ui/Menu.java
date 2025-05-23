@@ -453,6 +453,13 @@ public class Menu extends Application {
             buttonMessage.setText("Viewing profile...");
         });
 
+        editButton.setOnAction(e -> {
+            // Display the edit profile menu
+            delay(12, stage);
+            buttonMessage.setStyle("-fx-text-fill: green;");
+            buttonMessage.setText("Editing profile...");
+        });
+
         eventsButton.setOnAction(e -> {
             // Display the events menu
             delay(8, stage);
@@ -482,59 +489,354 @@ public class Menu extends Application {
         stage.show();
         }
 
+    private void showEditProfile(User user, Stage stage) {
+        // Create a header message
+        Label editProfileMessage = new Label("Edit My Profile");
+        editProfileMessage.getStyleClass().add("custom-label");
+
+        // Create form fields with reduced spacing
+        VBox form = new VBox(8);
+        form.setAlignment(Pos.CENTER);
+        form.setMaxWidth(500);
+
+        // Status message label
+        Label statusMessage = new Label("");
+        statusMessage.getStyleClass().add("register-message-label");
+
+        // Create profile fields for editing
+        String[] labels = {"Name", "Email", "Address", "Phone"};
+        String[] values = {
+                user.getName(),
+                user.getEmail(),
+                ((Customer) user).getAddress(),
+                ((Customer) user).getPhoneNumber()
+        };
+
+        TextField[] fields = new TextField[4];
+
+        // Create a card for each editable field with reduced size
+        for (int i = 0; i < labels.length; i++) {
+            VBox card = new VBox(3);
+            card.setStyle("-fx-background-color: #35393e; -fx-background-radius: 10; -fx-padding: 10;");
+
+            Label fieldLabel = new Label(labels[i]);
+            fieldLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #35c9c5; -fx-font-weight: bold;");
+
+            fields[i] = new TextField(values[i]);
+            fields[i].setStyle("-fx-background-color: #252525; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 5;");
+
+            card.getChildren().addAll(fieldLabel, fields[i]);
+            form.getChildren().add(card);
+        }
+
+        // Add field for changing password with reduced size
+        VBox passwordCard = new VBox(3);
+        passwordCard.setStyle("-fx-background-color: #35393e; -fx-background-radius: 10; -fx-padding: 10;");
+
+        Label passwordLabel = new Label("New Password (leave empty to keep current)");
+        passwordLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #35c9c5; -fx-font-weight: bold;");
+
+        PasswordField passwordField = new PasswordField();
+        passwordField.setStyle("-fx-background-color: #252525; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 5;");
+
+        passwordCard.getChildren().addAll(passwordLabel, passwordField);
+        form.getChildren().add(passwordCard);
+
+        // Create buttons
+        HBox buttonBox = new HBox(20);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        Button saveButton = new Button("Save Changes");
+        saveButton.setPrefSize(200, 40);
+        saveButton.getStyleClass().add("button");
+
+        Button backButton = new Button("Cancel");
+        backButton.setPrefSize(200, 40);
+        backButton.getStyleClass().add("button");
+
+        buttonBox.getChildren().addAll(saveButton, backButton);
+
+        // Add form and buttons to main layout with reduced spacing
+        VBox mainLayout = new VBox(20);
+        mainLayout.setAlignment(Pos.CENTER);
+        mainLayout.getChildren().addAll(form, buttonBox);
+        mainLayout.setPadding(new Insets(20, 0, 30, 0));
+
+        // Create layout structure
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(editProfileMessage);
+        BorderPane.setAlignment(editProfileMessage, Pos.CENTER);
+        borderPane.setCenter(mainLayout);
+
+        // Create a StackPane to overlay the message
+        StackPane stackPane = new StackPane();
+        stackPane.getChildren().add(borderPane);
+        stackPane.setStyle("-fx-background-color: #423f3f;");
+
+        StackPane.setAlignment(statusMessage, Pos.BOTTOM_CENTER);
+        stackPane.getChildren().add(statusMessage);
+
+        // Handle save button action
+        saveButton.setOnAction(e -> {
+            String name = fields[0].getText().trim();
+            String email = fields[1].getText().trim();
+            String address = fields[2].getText().trim();
+            String phone = fields[3].getText().trim();
+            String password = passwordField.getText().trim();
+
+            // Validate inputs
+            if (name.isEmpty() || email.isEmpty() || address.isEmpty() || phone.isEmpty()) {
+                statusMessage.setStyle("-fx-text-fill: red;");
+                statusMessage.setText("All fields except password must be filled out!");
+                return;
+            }
+
+            // Email validation using regex
+            String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+            Pattern pattern = Pattern.compile(emailRegex);
+            Matcher matcher = pattern.matcher(email);
+            if (!matcher.matches()) {
+                statusMessage.setStyle("-fx-text-fill: red;");
+                statusMessage.setText("Please enter a valid email address!");
+                return;
+            }
+
+            // Phone validation
+            if (!phone.matches("\\d{10}")) {
+                statusMessage.setStyle("-fx-text-fill: red;");
+                statusMessage.setText("Phone number must be 10 digits!");
+                return;
+            }
+
+            // Update user in database
+            try {
+                boolean success = updateUserProfile(conn, user, name, email, address, phone, password);
+                if (success) {
+                    // Update the local user object
+                    user.setName(name);
+                    user.setEmail(email);
+                    ((Customer) user).setAddress(address);
+                    ((Customer) user).setPhoneNumber(phone);
+
+                    statusMessage.setStyle("-fx-text-fill: green;");
+                    statusMessage.setText("Profile updated successfully!");
+
+                    // Delay before returning to profile
+                    PauseTransition delay = new PauseTransition(Duration.seconds(1.5));
+                    delay.setOnFinished(event -> showProfile(stage));
+                    delay.play();
+                } else {
+                    statusMessage.setStyle("-fx-text-fill: red;");
+                    statusMessage.setText("Failed to update profile. Please try again.");
+                }
+            } catch (Exception ex) {
+                statusMessage.setStyle("-fx-text-fill: red;");
+                statusMessage.setText("Error: " + ex.getMessage());
+            }
+        });
+
+        // Handle back button action
+        backButton.setOnAction(e -> {
+            statusMessage.setStyle("-fx-text-fill: yellow;");
+            statusMessage.setText("Returning to profile...");
+            delay(3, stage);
+        });
+
+        // Set the scene directly with stackPane
+        Scene scene = new Scene(stackPane, 1280, 720);
+        scene.getStylesheets().add("styles.css");
+        stage.setTitle("Edit Profile");
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    private boolean updateUserProfile(Connection conn, User user, String name, String email, String address, String phone, String password) {
+        try {
+            if (!email.equals(user.getEmail())) {
+                if (isEmailInUse(conn, email, user.getId())) {
+                    return false;
+                }
+            }
+
+            if (phone != null && !phone.equals(((Customer) user).getPhoneNumber())) {
+                if (isPhoneInUse(conn, phone, user.getId())) {
+                    return false;
+                }
+            }
+
+            StringBuilder queryBuilder = new StringBuilder("UPDATE users SET ");
+            List<Object> parameters = new ArrayList<>();
+            boolean hasChanges = false;
+
+            if (!name.equals(user.getName())) {
+                queryBuilder.append("name = ?, ");
+                parameters.add(name);
+                hasChanges = true;
+            }
+
+            if (!email.equals(user.getEmail())) {
+                queryBuilder.append("email = ?, ");
+                parameters.add(email);
+                hasChanges = true;
+            }
+
+            // Fix here: compare address with the user's address, not email
+            if (!address.equals(((Customer) user).getAddress())) {
+                queryBuilder.append("address = ?, ");
+                parameters.add(address);
+                hasChanges = true;
+            }
+
+            if (phone != null && !phone.equals(((Customer) user).getPhoneNumber())) {
+                queryBuilder.append("phone = ?, ");
+                parameters.add(phone);
+                hasChanges = true;
+            }
+
+            if (password != null && !password.isEmpty()) {
+                String hashedPassword = PasswordUtils.hashPassword(password);
+                queryBuilder.append("password = ?, ");
+                parameters.add(hashedPassword);
+                hasChanges = true;
+            }
+
+            if (!hasChanges) {
+                System.out.println("No changes to update");
+                return true;
+            }
+
+            String updateQuery = queryBuilder.substring(0, queryBuilder.length() - 2) + " WHERE id = ?";
+            parameters.add(user.getId());
+
+            try (PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
+                for (int i = 0; i < parameters.size(); i++) {
+                    stmt.setObject(i + 1, parameters.get(i));
+                }
+
+                int rowsUpdated = stmt.executeUpdate();
+                return rowsUpdated > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error updating user profile: " + e.getMessage());
+            e.printStackTrace(); // Adding stack trace for better debugging
+            return false;
+        }
+    }
+
+    private boolean isEmailInUse(Connection conn, String email, int excludeUserId) throws SQLException {
+        String checkQuery = "SELECT COUNT(*) FROM users WHERE email = ? AND id != ?";
+        try (PreparedStatement stmt = conn.prepareStatement(checkQuery)) {
+            stmt.setString(1, email);
+            stmt.setInt(2, excludeUserId);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next() && rs.getInt(1) > 0;
+        }
+    }
+
+    private boolean isPhoneInUse(Connection conn, String phone, int excludeUserId) throws SQLException {
+        String checkQuery = "SELECT COUNT(*) FROM users WHERE phone = ? AND id != ?";
+        try (PreparedStatement stmt = conn.prepareStatement(checkQuery)) {
+            stmt.setString(1, phone);
+            stmt.setInt(2, excludeUserId);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next() && rs.getInt(1) > 0;
+        }
+    }
+
     private void showProfile(Stage stage) {
         // Create a welcome message
-        Label profileMessage = new Label("My profile");
+        Label profileMessage = new Label("My Profile");
         profileMessage.getStyleClass().add("custom-label");
 
-        // Back button
+        // Create styled info cards with reduced spacing
+        VBox infoBox = new VBox(8);
+        infoBox.setAlignment(Pos.CENTER);
+        infoBox.setMaxWidth(600);
+
+        // Create styled profile details with icons
+        String[] labels = {"Name", "Email", "Address", "Phone"};
+        String[] values = {
+                getUser().getName(),
+                getUser().getEmail(),
+                ((Customer) user).getAddress(),
+                ((Customer) user).getPhoneNumber()
+        };
+
+        for (int i = 0; i < labels.length; i++) {
+            // Create card for each detail with reduced padding
+            VBox card = new VBox(3);
+            card.setStyle("-fx-background-color: #35393e; -fx-background-radius: 10; -fx-padding: 10;");
+
+            // Field label
+            Label fieldLabel = new Label(labels[i]);
+            fieldLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #35c9c5; -fx-font-weight: bold;");
+
+            // Field value
+            Label fieldValue = new Label(values[i]);
+            fieldValue.setStyle("-fx-font-size: 14px; -fx-text-fill: white; -fx-wrap-text: true;");
+            fieldValue.setMaxWidth(550);
+
+            card.getChildren().addAll(fieldLabel, fieldValue);
+            infoBox.getChildren().add(card);
+        }
+
+        // Add balance display
+        VBox balanceCard = new VBox(3);
+        balanceCard.setStyle("-fx-background-radius: 10; -fx-padding: 10;");
+        if(getUser().getBalance() < 1000)
+            balanceCard.getStyleClass().add("red-balance-card");
+        else
+            balanceCard.getStyleClass().add("green-balance-card");
+
+        Label balanceLabel = new Label("Current Balance");
+        balanceLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #333; -fx-font-weight: bold;");
+
+        Label balanceValue = new Label("$" + getUser().getBalance());
+        balanceValue.setStyle("-fx-font-size: 20px; -fx-text-fill: #333; -fx-font-weight: bold;");
+
+        balanceCard.getChildren().addAll(balanceLabel, balanceValue);
+        infoBox.getChildren().add(balanceCard);
+
+        // Back button with styling
         Button backButton = new Button("Back");
-        backButton.setPrefSize(200, 50);
+        backButton.setPrefSize(200, 40);
+        backButton.getStyleClass().add("button");
 
-        // Profile details
-        Label nameLabel = new Label("Name: " + getUser().getName());
-        Label emailLabel = new Label("Email: " + getUser().getEmail());
-        Label addressLabel = new Label("Address: " + ((Customer) getUser()).getAddress());
-        Label phoneLabel = new Label("Phone: " + ((Customer) getUser()).getPhoneNumber());
-
-        // Create a VBox layout
-        VBox vbox = new VBox(10);
-        vbox.getChildren().addAll(nameLabel, emailLabel, addressLabel, phoneLabel, backButton);
-        vbox.setAlignment(Pos.CENTER);
+        // Container for the profile content with reduced spacing
+        VBox contentBox = new VBox(20);
+        contentBox.setAlignment(Pos.CENTER);
+        contentBox.getChildren().addAll(infoBox, backButton);
+        contentBox.setPadding(new Insets(20, 0, 30, 0));
 
         // Create a BorderPane layout
         BorderPane borderPane = new BorderPane();
         borderPane.setTop(profileMessage);
         BorderPane.setAlignment(profileMessage, Pos.CENTER);
-        borderPane.setCenter(vbox);
+        borderPane.setCenter(contentBox);
 
-        // Create a StackPane to overlay the exit message
+        // Create a StackPane for the layout
         StackPane stackPane = new StackPane();
         stackPane.getChildren().add(borderPane);
+        stackPane.setStyle("-fx-background-color: #423f3f;");
 
-        stackPane.setStyle("-fx-background-color: #423f3f;"); // Set background color
-
-        // Create a label for the exit message (initially hidden)
+        // Create a label for messages
         Label buttonMessage = new Label();
         buttonMessage.getStyleClass().add("register-message-label");
         StackPane.setAlignment(buttonMessage, Pos.BOTTOM_CENTER);
         stackPane.getChildren().add(buttonMessage);
 
         backButton.setOnAction(e -> {
-            // Display the exit message
-            delay(2, stage);
             buttonMessage.setStyle("-fx-text-fill: yellow;");
             buttonMessage.setText("Returning...");
+            delay(2, stage);
         });
 
-        // Set the scene
+        // Set the scene directly with stackPane
         Scene scene = new Scene(stackPane, 1280, 720);
         scene.getStylesheets().add("styles.css");
-        stage.setTitle("My profile");
+        stage.setTitle("My Profile");
         stage.setScene(scene);
         stage.show();
-
-
     }
 
     // Tickets submenu
@@ -1299,6 +1601,7 @@ public class Menu extends Application {
 
                 tickets.add(ticket);
             }
+            Collections.sort(tickets);
         } catch (SQLException e) {
             System.out.println("Error loading tickets: " + e.getMessage());
         }
@@ -1351,6 +1654,10 @@ public class Menu extends Application {
             }
             else if(type == 11) {
                 showUFCOnline(stage);
+            }
+            else if(type == 12)
+            {
+                showEditProfile(getUser(), stage);
             }
         });
         delay.play();

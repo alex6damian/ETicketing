@@ -48,6 +48,7 @@ public abstract class User {
         return password;
     }
 
+
     public void setPassword(String password){
         this.password = password;
     }

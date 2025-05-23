@@ -124,7 +124,7 @@ public class TicketService {
     // Method to sell a ticket
     public void sellTicket(Connection conn, int ticketId, User user) {
         String selectQuery = "SELECT price FROM tickets WHERE id = ? AND user_id = ?";
-        String updateQuery = "UPDATE tickets SET user_id = NULL WHERE id = ?";
+        String updateQuery = "DELETE FROM tickets WHERE id = ? AND user_id = ?";
 
         try (PreparedStatement selectStmt = conn.prepareStatement(selectQuery);
              PreparedStatement updateStmt = conn.prepareStatement(updateQuery)) {
@@ -134,14 +134,18 @@ public class TicketService {
             selectStmt.setInt(2, user.getId());
             ResultSet rs = selectStmt.executeQuery();
 
+            // Check if the ticket exists and belongs to the user
             if (rs.next()) {
                 double ticketPrice = rs.getDouble("price");
 
                 // Delete the ticket
-                updateStmt.setInt(1, user.getId());
+                updateStmt.setInt(1, ticketId);
+                updateStmt.setInt(2, user.getId());
+                updateStmt.executeUpdate();
+                System.out.println("Ticket sold successfully.");
+
 
                 updateBalance(user, -ticketPrice); // Deduct the ticket price from the user's balance
-
                 System.out.println("Ticket sold successfully. Balance updated.");
             } else {
                 System.out.println("Ticket not found or does not belong to the user.");

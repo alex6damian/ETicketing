@@ -36,3 +36,9 @@
     -fx-padding: 0 0 0 0px;
     -fx-font-family: "Comic Sans MS";
 }
+.green-balance-card {
+    -fx-background-color: #126009;
+}
+.red-balance-card {
+    -fx-background-color: #831616;
+}
