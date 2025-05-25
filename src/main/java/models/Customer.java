@@ -10,6 +10,7 @@ public class Customer extends User {
 
     public Customer(String name, String email, String password, double balance, String address, String phoneNumber) {
         super(name, email, password, balance);
+        System.out.println("Creating a new Customer with ID: " + id);
         this.address = address;
         this.phoneNumber = phoneNumber;
         this.tickets = new ArrayList<Ticket<?>>();

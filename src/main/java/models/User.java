@@ -70,6 +70,13 @@ public abstract class User {
 
     public abstract String getUserType();
 
+    public static int getUserCount() {
+        return userCount;
+    }
+
+    public static void setUserCount(int userCount) {
+        User.userCount = userCount;
+    }
 
     // HashCode and Equals
     @Override

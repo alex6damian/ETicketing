@@ -40,6 +40,8 @@ public class Menu extends Application {
         Scanner = new Scanner(System.in);
         userLoggedIn = false;
         conn = DatabaseConnection.getInstance().getConnection();
+        events = new ArrayList<>();
+        users = new HashMap<>();
         if (conn != null) {
             System.out.println("Database connection is working.");
         } else {
@@ -58,14 +60,18 @@ public class Menu extends Application {
     @Override
     public void start(Stage stage) {
         // Load the users from the database
-        loadUsers(conn);
+        if(users.isEmpty())
+            loadUsers(conn);
+
+        System.out.println(User.getUserCount() + " users loaded from the database.");
 
         // Load the events from the database
-        loadEvents(conn);
+        if(events.isEmpty())
+            loadEvents(conn);
 
-        //showMainMenu(stage);
-        user = login(getConn(), "nintendo@gmail.com", "nintendo");
-        showUserMenu(user, stage);
+        showMainMenu(stage);
+//        user = login(getConn(), "nintendo@gmail.com", "nintendo");
+//        showUserMenu(user, stage);
     }
 
     public static void main(String[] args) {
@@ -227,7 +233,10 @@ public class Menu extends Application {
             // Call the register method with the collected data
             Customer customer = new Customer(name, email, password, 5000, address, phone);
             CustomerDAO customerDAO = new CustomerDAO();
+
             if (customerDAO.addUser(customer)) {
+                // Add the user to the local users map without loading the whole database again
+                users.put(email, customer);
 
                 registerMessage.setStyle("-fx-text-fill: green;");
                 registerMessage.setText("Registration successful!");
@@ -610,7 +619,7 @@ public class Menu extends Application {
 
             // Update user in database
             try {
-                boolean success = updateUserProfile(conn, user, name, email, address, phone, password);
+                boolean success = UserDAO.updateUserProfile(conn, user, name, email, address, phone, password);
                 if (success) {
                     // Update the local user object
                     user.setName(name);
@@ -620,11 +629,7 @@ public class Menu extends Application {
 
                     statusMessage.setStyle("-fx-text-fill: green;");
                     statusMessage.setText("Profile updated successfully!");
-
-                    // Delay before returning to profile
-                    PauseTransition delay = new PauseTransition(Duration.seconds(1.5));
-                    delay.setOnFinished(event -> showProfile(stage));
-                    delay.play();
+                    delay(2, stage);
                 } else {
                     statusMessage.setStyle("-fx-text-fill: red;");
                     statusMessage.setText("Failed to update profile. Please try again.");
@@ -648,99 +653,6 @@ public class Menu extends Application {
         stage.setTitle("Edit Profile");
         stage.setScene(scene);
         stage.show();
-    }
-
-    private boolean updateUserProfile(Connection conn, User user, String name, String email, String address, String phone, String password) {
-        try {
-            if (!email.equals(user.getEmail())) {
-                if (isEmailInUse(conn, email, user.getId())) {
-                    return false;
-                }
-            }
-
-            if (phone != null && !phone.equals(((Customer) user).getPhoneNumber())) {
-                if (isPhoneInUse(conn, phone, user.getId())) {
-                    return false;
-                }
-            }
-
-            StringBuilder queryBuilder = new StringBuilder("UPDATE users SET ");
-            List<Object> parameters = new ArrayList<>();
-            boolean hasChanges = false;
-
-            if (!name.equals(user.getName())) {
-                queryBuilder.append("name = ?, ");
-                parameters.add(name);
-                hasChanges = true;
-            }
-
-            if (!email.equals(user.getEmail())) {
-                queryBuilder.append("email = ?, ");
-                parameters.add(email);
-                hasChanges = true;
-            }
-
-            // Fix here: compare address with the user's address, not email
-            if (!address.equals(((Customer) user).getAddress())) {
-                queryBuilder.append("address = ?, ");
-                parameters.add(address);
-                hasChanges = true;
-            }
-
-            if (phone != null && !phone.equals(((Customer) user).getPhoneNumber())) {
-                queryBuilder.append("phone = ?, ");
-                parameters.add(phone);
-                hasChanges = true;
-            }
-
-            if (password != null && !password.isEmpty()) {
-                String hashedPassword = PasswordUtils.hashPassword(password);
-                queryBuilder.append("password = ?, ");
-                parameters.add(hashedPassword);
-                hasChanges = true;
-            }
-
-            if (!hasChanges) {
-                System.out.println("No changes to update");
-                return true;
-            }
-
-            String updateQuery = queryBuilder.substring(0, queryBuilder.length() - 2) + " WHERE id = ?";
-            parameters.add(user.getId());
-
-            try (PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
-                for (int i = 0; i < parameters.size(); i++) {
-                    stmt.setObject(i + 1, parameters.get(i));
-                }
-
-                int rowsUpdated = stmt.executeUpdate();
-                return rowsUpdated > 0;
-            }
-        } catch (SQLException e) {
-            System.err.println("Error updating user profile: " + e.getMessage());
-            e.printStackTrace(); // Adding stack trace for better debugging
-            return false;
-        }
-    }
-
-    private boolean isEmailInUse(Connection conn, String email, int excludeUserId) throws SQLException {
-        String checkQuery = "SELECT COUNT(*) FROM users WHERE email = ? AND id != ?";
-        try (PreparedStatement stmt = conn.prepareStatement(checkQuery)) {
-            stmt.setString(1, email);
-            stmt.setInt(2, excludeUserId);
-            ResultSet rs = stmt.executeQuery();
-            return rs.next() && rs.getInt(1) > 0;
-        }
-    }
-
-    private boolean isPhoneInUse(Connection conn, String phone, int excludeUserId) throws SQLException {
-        String checkQuery = "SELECT COUNT(*) FROM users WHERE phone = ? AND id != ?";
-        try (PreparedStatement stmt = conn.prepareStatement(checkQuery)) {
-            stmt.setString(1, phone);
-            stmt.setInt(2, excludeUserId);
-            ResultSet rs = stmt.executeQuery();
-            return rs.next() && rs.getInt(1) > 0;
-        }
     }
 
     private void showProfile(Stage stage) {
@@ -1483,7 +1395,6 @@ public class Menu extends Application {
     }
 
     private void loadUsers(Connection conn){
-        users = new HashMap<>();
         String query = "SELECT * FROM users";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             ResultSet rs = stmt.executeQuery();
@@ -1514,7 +1425,6 @@ public class Menu extends Application {
     }
 
     private void loadEvents(Connection conn) {
-        events = new ArrayList<>();
         String query = "SELECT * FROM Event";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             ResultSet rs = stmt.executeQuery();
@@ -1609,7 +1519,7 @@ public class Menu extends Application {
     }
 
     private void delay(int type, Stage stage) {
-        PauseTransition delay = new PauseTransition(Duration.seconds(0.1)); // TODO: Make it a parameter
+        PauseTransition delay = new PauseTransition(Duration.seconds(0.5)); // TODO: Make it a parameter
         delay.setOnFinished(event -> {
             if(type == 0) {
                 try {

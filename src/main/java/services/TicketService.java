@@ -62,13 +62,11 @@ public class TicketService {
 
         try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
 
-            double price = ticket.getPrice();
-
             // Insert the ticket into the database
             insertStmt.setInt(1, ticket.getId());
             insertStmt.setInt(2, user.getId());
             insertStmt.setInt(3, event.getEventId());
-            insertStmt.setDouble(4, price);
+            insertStmt.setDouble(4, ticket.getPrice());
             insertStmt.setString(5, "Concert");
             insertStmt.setString(6, row);
             insertStmt.executeUpdate();
@@ -78,7 +76,7 @@ public class TicketService {
         }
 
         // Update the user's balance
-        updateBalance(user, ticket.getPrice());
+        updateBalance(user, - ticket.getPrice());
         return ticket;
     }
 
@@ -89,13 +87,11 @@ public class TicketService {
 
         try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
 
-            double price = ticket.getPrice();
-
             // Insert the ticket into the database
             insertStmt.setInt(1, ticket.getId());
             insertStmt.setInt(2, user.getId());
             insertStmt.setInt(3, event.getEventId());
-            insertStmt.setDouble(4, price);
+            insertStmt.setDouble(4, ticket.getPrice());
             insertStmt.setString(5, "UFCOnline");
             insertStmt.setString(6, accessCode);
             insertStmt.executeUpdate();
@@ -104,7 +100,7 @@ public class TicketService {
             e.printStackTrace();
         }
 
-        updateBalance(user, ticket.getPrice());
+        updateBalance(user, - ticket.getPrice());
         return ticket;
     }
 
@@ -145,7 +141,7 @@ public class TicketService {
                 System.out.println("Ticket sold successfully.");
 
 
-                updateBalance(user, -ticketPrice); // Deduct the ticket price from the user's balance
+                updateBalance(user, ticketPrice); // Add the ticket price from the user's balance
                 System.out.println("Ticket sold successfully. Balance updated.");
             } else {
                 System.out.println("Ticket not found or does not belong to the user.");
