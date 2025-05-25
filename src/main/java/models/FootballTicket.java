@@ -8,7 +8,6 @@ public class FootballTicket extends Ticket<FootballMatch> {
         super(500, event, user);
         this.bundle = bundle;
         this.seat = seat;
-        this.setPrice(calculatePrice());
     }
 
     // Constructor for loading from database
@@ -16,7 +15,6 @@ public class FootballTicket extends Ticket<FootballMatch> {
         super(500, event, user, id);
         this.bundle = bundle;
         this.seat = seat;
-        this.setPrice(calculatePrice());
     }
 
     @Override

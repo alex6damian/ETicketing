@@ -26,21 +26,28 @@ public class TicketService {
 
     // Method to buy a football ticket
     public FootballTicket buyFootballTicket(Connection conn, User user, FootballMatch event, String bundle, int seat) {
+
         FootballTicket ticket = new FootballTicket(event, user, bundle, seat);
+        if(user.getBalance() < ticket.calculatePrice()) {
+            System.out.println("Insufficient balance to buy the ticket.");
+            ticket=null;
+            System.gc();
+            return ticket;
+        }
+
         String insertQuery = "INSERT INTO tickets (id, user_id, event_id, price, type, bundle, seat_number) VALUES (?, ?, ?, ?, ?, ?, ?)";
         event.setSeatsAvailable(seat-1);
         EventService.getInstance().updateSeatsAvailable(conn, event.getEventId(), event.getSeatsAvailable());
 
         try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
 
-            double price = ticket.calculatePrice();
-            ticket.setPrice(price);
+            ticket.setPrice(ticket.calculatePrice());
 
             // Insert the ticket into the database
             insertStmt.setInt(1, ticket.getId());
             insertStmt.setInt(2, user.getId());
             insertStmt.setInt(3, event.getEventId());
-            insertStmt.setDouble(4, price);
+            insertStmt.setDouble(4, ticket.getPrice());
             insertStmt.setString(5, "FootballMatch");
             insertStmt.setString(6, bundle);
             insertStmt.setInt(7, seat);
@@ -58,6 +65,12 @@ public class TicketService {
     // Method to buy a concert ticket
     public ConcertTicket buyConcertTicket(Connection conn, User user, Concert event, String row) {
         ConcertTicket ticket = new ConcertTicket(event, user, row);
+        if(user.getBalance() < ticket.calculatePrice()) {
+            System.out.println("Insufficient balance to buy the ticket.");
+            ticket=null;
+            System.gc();
+            return ticket;
+        }
         String insertQuery = "INSERT INTO tickets (id, user_id, event_id, price, type, row) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
@@ -83,6 +96,12 @@ public class TicketService {
     // Method to buy a UFC online ticket
     public UFCOnlineTicket buyUFCOnlineTicket(Connection conn, User user, UFCOnline event, String accessCode) {
         UFCOnlineTicket ticket = new UFCOnlineTicket(event, user, accessCode);
+        if(user.getBalance() < ticket.calculatePrice()) {
+            System.out.println("Insufficient balance to buy the ticket.");
+            ticket=null;
+            System.gc();
+            return ticket;
+        }
         String insertQuery = "INSERT INTO tickets (id, user_id, event_id, price, type, access_code) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
@@ -154,10 +173,13 @@ public class TicketService {
     // Method to update the user's balance
     private void updateBalance(User user, double amount) {
         String updateQuery = "UPDATE users SET balance = ? WHERE id = ?";
+        System.out.println("Updating balance for user ID: " + user.getId() + " by amount: " + amount);
         try (PreparedStatement stmt = Menu.getConn().prepareStatement(updateQuery)) {
             stmt.setDouble(1, user.getBalance() + amount);
             stmt.setInt(2, user.getId());
             stmt.executeUpdate();
+
+            user.setBalance(user.getBalance() + amount);
         } catch (SQLException e) {
             e.printStackTrace();
         }

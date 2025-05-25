@@ -3,6 +3,7 @@ package ui;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -14,18 +15,15 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import models.*;
-import services.EventService;
 import services.TicketService;
 import utils.DatabaseConnection;
 import utils.PasswordUtils;
-import utils.Utils;
-import javax.xml.transform.Result;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.stage.Stage;
 
 public class Menu extends Application {
     private static boolean userLoggedIn;
@@ -60,18 +58,18 @@ public class Menu extends Application {
     @Override
     public void start(Stage stage) {
         // Load the users from the database
-        if(users.isEmpty())
+        if(users.isEmpty()) {
             loadUsers(conn);
-
-        System.out.println(User.getUserCount() + " users loaded from the database.");
+            System.out.println(User.getUserCount() + " users loaded from the database.");
+        }
 
         // Load the events from the database
         if(events.isEmpty())
             loadEvents(conn);
 
-        showMainMenu(stage);
-//        user = login(getConn(), "nintendo@gmail.com", "nintendo");
-//        showUserMenu(user, stage);
+//        showMainMenu(stage);
+        user = login(getConn(), "test@gmail.com", "parola");
+        showUserMenu(user, stage);
     }
 
     public static void main(String[] args) {
@@ -1168,14 +1166,22 @@ public class Menu extends Application {
                     bundleDialog.setContentText("Available bundles:");
 
                     Optional<String> selectedBundle = bundleDialog.showAndWait();
+                    AtomicBoolean sufficientFunds = new AtomicBoolean(false);
                     selectedBundle.ifPresent(bundle -> {
                         System.out.println("Selected bundle: " + bundle);
-                        TicketService.getInstance().buyFootballTicket(getConn(), getUser(), (FootballMatch) event, bundle, ((FootballMatch) event).getSeatsAvailable());
+                        if(TicketService.getInstance().buyFootballTicket(getConn(), getUser(), (FootballMatch) event, bundle, ((FootballMatch) event).getSeatsAvailable())!=null)
+                            sufficientFunds.set(true);
+                        if (!sufficientFunds.get()) {
+                            buttonMessage.setStyle("-fx-text-fill: red;");
+                            buttonMessage.setText("Insufficient funds to purchase ticket for event: " + event.getEventName());
+                            System.out.println("Insufficient funds to purchase ticket for event: " + event.getEventName());
+                        }
+                        else {
+                            buttonMessage.setStyle("-fx-text-fill: green;");
+                            buttonMessage.setText("Ticket purchased for event: " + event.getEventName());
+                            System.out.println("Ticket purchased for event: " + event.getEventName());
+                        }
                     });
-                    buttonMessage.setStyle("-fx-text-fill: green;");
-                    buttonMessage.setText("Ticket purchased for event: " + event.getEventName());
-                    System.out.println("Ticket purchased for event: " + event.getEventName());
-
                 } else {
                     System.out.println("Purchase canceled.");
                     buttonMessage.setStyle("-fx-text-fill: yellow;");
@@ -1263,14 +1269,21 @@ public class Menu extends Application {
                     rowDialog.setContentText("Available Rows:");
 
                     Optional<String> selectedRow = rowDialog.showAndWait();
+                    AtomicBoolean sufficientFunds = new AtomicBoolean(false);
                     selectedRow.ifPresent(row -> {
                         System.out.println("Selected row: " + row);
-                        TicketService.getInstance().buyConcertTicket(getConn(), getUser(), (Concert) event, row);
+                        if(TicketService.getInstance().buyConcertTicket(getConn(), getUser(), (Concert) event, row)!=null)
+                            sufficientFunds.set(true);
+                        if (!sufficientFunds.get()) {
+                            buttonMessage.setStyle("-fx-text-fill: red;");
+                            buttonMessage.setText("Insufficient funds to purchase ticket for event: " + event.getEventName());
+                            System.out.println("Insufficient funds to purchase ticket for event: " + event.getEventName());
+                        } else {
+                            buttonMessage.setStyle("-fx-text-fill: green;");
+                            buttonMessage.setText("Ticket purchased for event: " + event.getEventName());
+                            System.out.println("Ticket purchased for event: " + event.getEventName());
+                        }
                     });
-                    buttonMessage.setStyle("-fx-text-fill: green;");
-                    buttonMessage.setText("Ticket purchased for event: " + event.getEventName());
-                    System.out.println("Ticket purchased for event: " + event.getEventName());
-
                 } else {
                     System.out.println("Purchase canceled.");
                     buttonMessage.setStyle("-fx-text-fill: yellow;");
@@ -1351,9 +1364,16 @@ public class Menu extends Application {
                 Optional<ButtonType> result = alert.showAndWait();
                 if (result.isPresent() && result.get() == purchaseButton){
                     String accessCode = UUID.randomUUID().toString();
-                    TicketService.getInstance().buyUFCOnlineTicket(getConn(), getUser(), (UFCOnline) event, accessCode);
-                    buttonMessage.setStyle("-fx-text-fill: green;");
-                    buttonMessage.setText("Ticket purchased for event: " + event.getEventName());
+                    AtomicBoolean sufficientFunds = new AtomicBoolean(false);
+                    if(TicketService.getInstance().buyUFCOnlineTicket(getConn(), getUser(), (UFCOnline) event, accessCode)!=null)
+                        sufficientFunds.set(true);
+                    if (!sufficientFunds.get()) {
+                        buttonMessage.setStyle("-fx-text-fill: red;");
+                        buttonMessage.setText("Insufficient funds to purchase ticket for event: " + event.getEventName());
+                        System.out.println("Insufficient funds to purchase ticket for event: " + event.getEventName());
+                    } else {
+                        buttonMessage.setStyle("-fx-text-fill: green;");
+                        buttonMessage.setText("Ticket purchased for event: " + event.getEventName());}
 
                 } else {
                     System.out.println("Purchase canceled.");
@@ -1402,6 +1422,7 @@ public class Menu extends Application {
                 String type = rs.getString("user_type");
                 if(type.equals("Customer")){
                     users.put(rs.getString("email"), new Customer(
+                            rs.getInt("id"),
                             rs.getString("name"),
                             rs.getString("email"),
                             rs.getString("password"),
@@ -1519,7 +1540,7 @@ public class Menu extends Application {
     }
 
     private void delay(int type, Stage stage) {
-        PauseTransition delay = new PauseTransition(Duration.seconds(0.5)); // TODO: Make it a parameter
+        PauseTransition delay = new PauseTransition(Duration.seconds(0.1));
         delay.setOnFinished(event -> {
             if(type == 0) {
                 try {
