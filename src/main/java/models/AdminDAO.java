@@ -27,7 +27,6 @@ public class AdminDAO extends UserDAO {
         }
     }
 
-    @Override
     public boolean updateUser(User user) {
         // Implementare pentru actualizarea unui Customer
         return false;

@@ -18,6 +18,14 @@ public abstract class User {
         this.balance = balance;
     }
 
+    public User(int id, String name, String email, String password, double balance) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.balance = balance;
+    }
+
     // Static and non-static blocks
     static
     {
@@ -70,6 +78,13 @@ public abstract class User {
 
     public abstract String getUserType();
 
+    public static int getUserCount() {
+        return userCount;
+    }
+
+    public static void setUserCount(int userCount) {
+        User.userCount = userCount;
+    }
 
     // HashCode and Equals
     @Override

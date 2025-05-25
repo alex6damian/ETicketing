@@ -15,6 +15,13 @@ public class Customer extends User {
         this.tickets = new ArrayList<Ticket<?>>();
     }
 
+    public Customer(int id, String name, String email, String password, double balance, String address, String phoneNumber) {
+        super(id, name, email, password, balance);
+        this.address = address;
+        this.phoneNumber = phoneNumber;
+        this.tickets = new ArrayList<Ticket<?>>();
+    }
+
 
     @Override
     public void displayInfo() {
