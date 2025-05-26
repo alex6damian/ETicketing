@@ -642,7 +642,7 @@ public class Menu extends Application {
         backButton.setOnAction(e -> {
             statusMessage.setStyle("-fx-text-fill: yellow;");
             statusMessage.setText("Returning to profile...");
-            delay(3, stage);
+            delay(2, stage);
         });
 
         // Set the scene directly with stackPane
