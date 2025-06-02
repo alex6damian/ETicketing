@@ -42,3 +42,6 @@ target/
 *.iws
 *.ipr
 *.iws
+
+### Log files ###
+logs/
