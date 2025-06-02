@@ -15,6 +15,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import models.*;
+import services.CSVLogger;
 import services.TicketService;
 import utils.DatabaseConnection;
 import utils.PasswordUtils;
@@ -67,9 +68,9 @@ public class Menu extends Application {
         if(events.isEmpty())
             loadEvents(conn);
 
-//        showMainMenu(stage);
-        user = login(getConn(), "test@gmail.com", "parola");
-        showUserMenu(user, stage);
+        showMainMenu(stage);
+//        user = login(getConn(), "test@gmail.com", "parola");
+//        showUserMenu(user, stage);
     }
 
     public static void main(String[] args) {
@@ -331,15 +332,21 @@ public class Menu extends Application {
 
             try{
                 User userConnected = login(getConn(), email, password);
-                if( userConnected == null ) {
+                if(userConnected == null) {
                     loginMessage.setStyle("-fx-text-fill: red;");
                     loginMessage.setText("Login failed. Please try again.");
+
+                    CSVLogger.getInstance().log(email, "Login", "Login failed for user: " + email);
 
                     System.out.println("Login failed. Please try again.");
                     return;
                 }
 
+                // connect the user
                 setUser(userConnected);
+                CSVLogger.getInstance().log(userConnected.getEmail(), "Login", "User logged in successfully");
+
+
                 loginMessage.setStyle("-fx-text-fill: green");
                 loginMessage.setText("Logging in...");
                 delay(2, stage);
@@ -1554,6 +1561,11 @@ public class Menu extends Application {
                 System.exit(0);
             }
             else if(type == 1) {
+                CSVLogger.getInstance().log(
+                        getUser().getEmail(),
+                        "Logout",
+                        "User logged out successfully.");
+                setUser(null);
                 start(stage);
             }
             else if(type == 2) {
