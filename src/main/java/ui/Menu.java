@@ -835,10 +835,12 @@ public class Menu extends Application {
 
                     statusMessage.setStyle("-fx-text-fill: green;");
                     statusMessage.setText("Profile updated successfully!");
+                    CSVLogger.getInstance().log(user.getEmail(), "Profile Update", "User updated profile successfully");
                     delay(2, stage);
                 } else {
                     statusMessage.setStyle("-fx-text-fill: red;");
                     statusMessage.setText("Failed to update profile. Please try again.");
+                    CSVLogger.getInstance().log(user.getEmail(), "Profile Update", "Failed to update profile");
                 }
             } catch (Exception ex) {
                 statusMessage.setStyle("-fx-text-fill: red;");
@@ -1137,6 +1139,12 @@ public class Menu extends Application {
                     buttonMessage.setStyle("-fx-text-fill: green;");
                     buttonMessage.setText("Ticket transferred to: " + email);
 
+                    CSVLogger.getInstance().log(
+                        getUser() != null ? getUser().getEmail() : "ADMIN",
+                        "TICKET_TRANSFERRED",
+                        "Transferred ticket for " + ticket.getEvent().getEventName() + " to " + email
+                    );
+
                     // Reload the tickets
                     delay(6, stage);
 
@@ -1208,9 +1216,19 @@ public class Menu extends Application {
                     TicketService.getInstance().sellTicket(conn, ticket.getId(), getUser());
                     buttonMessage.setStyle("-fx-text-fill: green;");
                     buttonMessage.setText("Ticket sold successfully! Money added to your account: " + ticket.getPrice()/2 + "$");
+                    CSVLogger.getInstance().log(
+                        getUser() != null ? getUser().getEmail() : "ADMIN",
+                        "TICKET_SOLD",
+                        "Sold ticket for " + ticket.getEvent().getEventName() + " for " + ticket.getPrice()/2 + "$"
+                    );
                 } else {
                     buttonMessage.setStyle("-fx-text-fill: yellow;");
                     buttonMessage.setText("Ticket sale canceled.");
+                    CSVLogger.getInstance().log(
+                        getUser() != null ? getUser().getEmail() : "ADMIN",
+                        "TICKET_SALE_CANCELED",
+                        "Canceled sale for ticket of " + ticket.getEvent().getEventName()
+                    );
                 }
 
                 // Reload the tickets

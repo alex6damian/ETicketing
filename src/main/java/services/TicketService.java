@@ -59,6 +59,9 @@ public class TicketService {
 
         // Update the user's balance
         updateBalance(user, -ticket.getPrice());
+        CSVLogger.getInstance().log(
+                user.getEmail(), "Ticket purchased", "Bought football ticket"
+        );
         return ticket;
     }
 
@@ -90,6 +93,9 @@ public class TicketService {
 
         // Update the user's balance
         updateBalance(user, - ticket.getPrice());
+        CSVLogger.getInstance().log(
+                user.getEmail(), "Ticket purchased", "Bought concert ticket"
+        );
         return ticket;
     }
 
@@ -120,6 +126,9 @@ public class TicketService {
         }
 
         updateBalance(user, - ticket.getPrice());
+        CSVLogger.getInstance().log(
+                user.getEmail(), "Ticket purchased", "Bought UFC online ticket"
+        );
         return ticket;
     }
 
