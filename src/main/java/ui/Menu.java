@@ -429,17 +429,28 @@ public class Menu extends Application {
         ticketsButton.setPrefSize(200, 50);
         Button exitButton = new Button("Logout");
         exitButton.setPrefSize(200, 50);
+        Button adminButton = new Button("Admin Menu");
+        adminButton.setPrefSize(200, 50);
 
         viewButton.getStyleClass().add("button");
         editButton.getStyleClass().add("button");
         eventsButton.getStyleClass().add("button");
         ticketsButton.getStyleClass().add("button");
         exitButton.getStyleClass().add("button");
+        if( user instanceof Admin) {
+            adminButton.getStyleClass().add("button");
+        } else {
+            adminButton.setVisible(false); // Hide admin button for non-admin users
+        }
 
 
         // Create a VBox layout
         VBox vbox = new VBox(10);
-        vbox.getChildren().addAll(viewButton, editButton, eventsButton, ticketsButton, exitButton);
+        if(user instanceof Admin) {
+        vbox.getChildren().addAll(viewButton, editButton, eventsButton, ticketsButton,adminButton, exitButton);}
+        else {
+            vbox.getChildren().addAll(viewButton, editButton, eventsButton, ticketsButton, exitButton);
+        }
         vbox.setAlignment(Pos.CENTER);
 
         // Create a BorderPane layout
@@ -488,6 +499,13 @@ public class Menu extends Application {
             buttonMessage.setText("Viewing tickets...");
         });
 
+        adminButton.setOnAction(e -> {
+            // Display the admin menu
+            delay(13, stage);
+            buttonMessage.setStyle("-fx-text-fill: green;");
+            buttonMessage.setText("Accessing admin menu...");
+        });
+
         exitButton.setOnAction(e -> {
             // Display the exit message
             delay(1, stage);
@@ -502,6 +520,189 @@ public class Menu extends Application {
         stage.setScene(scene);
         stage.show();
         }
+
+    private void showAdminMenu(Stage stage) {
+        Label adminLabel = new Label("Admin Menu");
+        adminLabel.getStyleClass().add("custom-label");
+
+        // Add Event button
+        Button addEventButton = new Button("Add Event");
+        addEventButton.setPrefSize(200, 50);
+        addEventButton.getStyleClass().add("button");
+
+        // Back button
+        Button backButton = new Button("Back");
+        backButton.setPrefSize(200, 50);
+        backButton.getStyleClass().add("button");
+
+        // Create a VBox with spacing between elements
+        VBox vbox = new VBox(20);
+        vbox.getChildren().addAll(adminLabel, addEventButton, backButton);
+        vbox.setAlignment(Pos.CENTER);
+        vbox.setPadding(new Insets(50, 0, 50, 0));
+
+        // Create message label
+        Label buttonMessage = new Label();
+        buttonMessage.getStyleClass().add("register-message-label");
+
+        // Set button actions
+        addEventButton.setOnAction(e -> showAddEventMenu(stage));
+        backButton.setOnAction(e -> delay(2, stage));
+
+        // Create layout with StackPane
+        StackPane stackPane = new StackPane();
+        stackPane.getChildren().add(vbox);
+        stackPane.getChildren().add(buttonMessage);
+        StackPane.setAlignment(buttonMessage, Pos.BOTTOM_CENTER);
+        stackPane.setStyle("-fx-background-color: #423f3f;");
+
+        // Set the scene
+        Scene scene = new Scene(stackPane, 1280, 720);
+        scene.getStylesheets().add("styles.css");
+        stage.setTitle("Admin Menu");
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    private void showAddEventMenu(Stage stage) {
+        Label addEventLabel = new Label("Add New Event");
+        addEventLabel.getStyleClass().add("custom-label");
+
+        // Set consistent width for input controls
+        final double FIELD_WIDTH = 300;
+
+        ComboBox<String> eventTypeBox = new ComboBox<>();
+        eventTypeBox.getItems().addAll("Concert", "FootballMatch", "UFCOnline");
+        eventTypeBox.setValue("Concert");
+        eventTypeBox.setPrefWidth(FIELD_WIDTH);
+
+        TextField nameField = new TextField();
+        nameField.setPromptText("Event Name");
+        nameField.setPrefWidth(FIELD_WIDTH);
+
+        TextField dateField = new TextField();
+        dateField.setPromptText("Date (YYYY-MM-DD)");
+        dateField.setPrefWidth(FIELD_WIDTH);
+
+        TextField timeField = new TextField();
+        timeField.setPromptText("Time (HH:MM)");
+        timeField.setPrefWidth(FIELD_WIDTH);
+
+        TextField locationField = new TextField();
+        locationField.setPromptText("Location");
+        locationField.setPrefWidth(FIELD_WIDTH);
+
+        TextField descriptionField = new TextField();
+        descriptionField.setPromptText("Description");
+        descriptionField.setPrefWidth(FIELD_WIDTH);
+
+        // Specific fields
+        TextField extra1 = new TextField();
+        extra1.setPrefWidth(FIELD_WIDTH);
+
+        TextField extra2 = new TextField();
+        extra2.setPrefWidth(FIELD_WIDTH);
+
+        TextField extra3 = new TextField();
+        extra3.setPrefWidth(FIELD_WIDTH);
+
+        eventTypeBox.setOnAction(e -> {
+            String type = eventTypeBox.getValue();
+            if ("Concert".equals(type)) {
+                extra1.setPromptText("Artist");
+                extra2.setPromptText("Genre");
+                extra3.setPromptText("Seats Available");
+                extra1.setVisible(true); extra2.setVisible(true); extra3.setVisible(true);
+            } else if ("FootballMatch".equals(type)) {
+                extra1.setPromptText("Stadium Name");
+                extra2.setPromptText("Seats Available");
+                extra3.setVisible(false);
+                extra1.setVisible(true); extra2.setVisible(true);
+            } else if ("UFCOnline".equals(type)) {
+                extra1.setPromptText("Link");
+                extra2.setPromptText("Fight Type");
+                extra3.setVisible(false);
+                extra1.setVisible(true); extra2.setVisible(true);
+            }
+        });
+        eventTypeBox.getOnAction().handle(null); // initialize fields
+
+        Button submitButton = new Button("Add Event");
+        Button backButton = new Button("Back");
+        submitButton.setPrefSize(200, 50);
+        backButton.setPrefSize(200, 50);
+
+        Label messageLabel = new Label();
+        messageLabel.getStyleClass().add("register-message-label");
+
+        VBox form = new VBox(10, addEventLabel, eventTypeBox, nameField, dateField, timeField,
+                locationField, descriptionField, extra1, extra2, extra3,
+                new HBox(20, submitButton, backButton), messageLabel);
+        form.setAlignment(Pos.CENTER);
+        form.setMaxWidth(FIELD_WIDTH + 100); // Add some padding to the max width
+        form.setPadding(new Insets(20));
+
+        // Place buttons in HBox for better layout
+        HBox buttons = new HBox(20, submitButton, backButton);
+        buttons.setAlignment(Pos.CENTER);
+        form.getChildren().set(form.getChildren().size() - 2, buttons);
+
+        submitButton.setOnAction(e -> {
+            // Same action handler code as before
+            String type = eventTypeBox.getValue();
+            String name = nameField.getText();
+            String date = dateField.getText();
+            String time = timeField.getText();
+            String location = locationField.getText();
+            String description = descriptionField.getText();
+
+            try {
+                if ("Concert".equals(type)) {
+                    String artist = extra1.getText();
+                    String genre = extra2.getText();
+                    int seats = Integer.parseInt(extra3.getText());
+                    Concert concert = new Concert(0, date, time, location, description, name, artist, genre, seats);
+                    // TODO: Add to DB and events list
+                    events.add(concert);
+                } else if ("FootballMatch".equals(type)) {
+                    String stadium = extra1.getText();
+                    int seats = Integer.parseInt(extra2.getText());
+                    FootballMatch match = new FootballMatch(0, date, time, location, description, name, stadium, seats);
+                    // TODO: Add to DB and events list
+                    events.add(match);
+                } else if ("UFCOnline".equals(type)) {
+                    String link = extra1.getText();
+                    String fightType = extra2.getText();
+                    UFCOnline ufc = new UFCOnline(0, date, time, location, description, name, link, fightType);
+                    // TODO: Add to DB and events list
+                    events.add(ufc);
+                }
+
+                // Log the event creation
+                CSVLogger.getInstance().log(
+                        getUser() != null ? getUser().getEmail() : "ADMIN",
+                        "EVENT_CREATED",
+                        "Created new " + type + ": " + name
+                );
+
+                messageLabel.setStyle("-fx-text-fill: green;");
+                messageLabel.setText("Event added successfully!");
+            } catch (Exception ex) {
+                messageLabel.setStyle("-fx-text-fill: red;");
+                messageLabel.setText("Error: " + ex.getMessage());
+            }
+        });
+
+        backButton.setOnAction(e -> showAdminMenu(stage));
+
+        StackPane stackPane = new StackPane(form);
+        stackPane.setStyle("-fx-background-color: #423f3f;");
+        Scene scene = new Scene(stackPane, 1280, 720);
+        scene.getStylesheets().add("styles.css");
+        stage.setTitle("Add Event");
+        stage.setScene(scene);
+        stage.show();
+    }
 
     private void showEditProfile(User user, Stage stage) {
         // Create a header message
@@ -836,7 +1037,7 @@ public class Menu extends Application {
         ticketsMessage.getStyleClass().add("custom-label");
 
         List<Ticket> tickets = getUserTickets(conn);
-        
+
         // Back button
         Button backButton = new Button("Back");
         backButton.setPrefSize(200, 50);
@@ -1561,11 +1762,13 @@ public class Menu extends Application {
                 System.exit(0);
             }
             else if(type == 1) {
-                CSVLogger.getInstance().log(
-                        getUser().getEmail(),
-                        "Logout",
-                        "User logged out successfully.");
-                setUser(null);
+                if(getUser() != null)
+                {
+                    CSVLogger.getInstance().log(
+                            getUser().getEmail(),
+                            "Logout",
+                            "User logged out successfully.");
+                }
                 start(stage);
             }
             else if(type == 2) {
@@ -1602,6 +1805,10 @@ public class Menu extends Application {
             {
                 showEditProfile(getUser(), stage);
             }
+            else if(type==13)
+            {
+                showAdminMenu(stage);
+            }
         });
         delay.play();
     }
@@ -1619,3 +1826,4 @@ public class Menu extends Application {
     }
 
 }
+
